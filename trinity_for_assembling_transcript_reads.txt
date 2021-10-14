@@ -1,0 +1,64 @@
+====== Trinity - Assembly of transcriptome reads ======
+Documentation by Shelby Williams (last updated by D. Salas-Leiva, 01-07-2020)
+
+Trinity is an assembler of RNA-seq reads, after they have been trimmed. Trinity uses three programs (Inchworm, Chrysalis, and Butterfly) to assemble large volumes of transcriptome reads. The output of Trinity is the Trinity.fasta file found in the /trinity_out_dir/ folder/
+
+----
+
+A simple Trinity shell script, using the new conda-environments:
+
+**For strand-specific data (No genome guided):  ** 
+
+It could be **RF** or **FR**. We usually get RF (typical of the dUTP/UDG sequencing method). If unsure, you need to draw violin plots to determine the specificity.
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+
+source activate trinity-2.11-with-workaround
+# this special built is version is 2.11
+Trinity --seqType fq --SS_lib_type RF --left Reads_R1_PairNtrim.fastq --right Reads_2_PairNtrim.fastq --CPU 10 --max_memory 20G
+conda deactivate
+</code>
+
+**For strand-specific data (Genome guided):  ** 
+
+It could be **RF** or **FR**. We usually get RF (typical of the dUTP/UDG sequencing method). If unsure, you need to draw violin plots to determine the specificity.
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+
+source activate trinity-2.11-with-workaround
+# this special built is version is 2.11
+Trinity --CPU 10 --max_memory 100G --genome_guided_bam yourgenome.fasta.sambamsorted.bam --genome_guided_max_intron 1000 --SS_lib_type RF
+conda deactivate
+</code>
+
+
+
+
+**For NO strand specific data:**
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+
+source activate trinity-2.11-with-workaround
+# this special built is version is 2.11
+Trinity --seqType fq --left Reads_R1_PairNtrim.fastq --right Reads_2_PairNtrim.fastq --CPU 10 --max_memory 20G
+source deactivate
+</code>
+
+
+**ATTENTION!**
+
+Some Trinity  versions, such as 2.4.0, are not compatible with Bowtie2. Skip this step by adding the flag **--no_bowtie**

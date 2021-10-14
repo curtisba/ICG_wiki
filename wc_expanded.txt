@@ -1,0 +1,14 @@
+wc\\
+
+wc some_file\\
+ wc tursiops.fa\\ 
+ 	gives 183354   249746 11950358 tursiops.fa\\
+ 		lines = 183354\\
+ 		words = 249746\\
+ 		bytes = 11950358\\
+ 	
+ wc tursiops.fa -l\\
+ 	gives 183354
+ 	
+ grep ">" tursiops.fa |wc -l\\
+ 	-output from one command can be feed into another command

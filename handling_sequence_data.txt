@@ -1,0 +1,7 @@
+[[454]]
+
+[[Illumina]]
+
+[[PacBIO]]
+
+[[minION]]

@@ -1,0 +1,60 @@
+By Joran Martijn (June 22nd 2021)
+
+One typically uses SSH (Secure SHell) to login to remote workstations and computer clusters like Perun and Graham of Compute Canada. For example one would enter in their terminal:
+
+<code>
+$ ssh <user>@<hostname>
+</code>
+
+or 
+
+<code>
+$ ssh -XY <user>@<hostname>
+</code>
+
+if you would like to use graphical applications remotely. You would then proceed to enter your password to authenticate themselves to the remote host. This standard way of doing things requires a lot of keystrokes, and is suboptimal regarding online security.
+
+A slightly more advanced and much more secure way to login to remote systems would be to make use of so-called **SSH Keys**. Instead of authenticating to a remote via a password, which are often poorly chosen despite peoples best intentions, you authenticate by showing your ability to decrypt an encrypted random number, which is different every time you login. I'll explain below.
+
+===Setting up SSH Keys===
+
+To set up an SSH Key based authenticating system, you'll first create an **SSH Key Pair** with ''ssh-keygen''. A key pair consists of a **Private Key** and a **Public Key**
+
+<code>
+$ ssh-keygen -t rsa
+</code>
+
+Follow the instructions in your terminal. You'll first be asked to save your Private Key (essentially a file) as ''~/.ssh/<id>_rsa''. You can substitute ''<id>'' with whatever name you like. Behind the scenes a Public Key is automatically created as ''~/.ssh/<id>_rsa.pub''. 
+
+You will also be asked to provide a **passphrase**. A passphrase is essentially the same as a password, but its use is slightly different. A passphrase is a password that is used to encrypt your Private Key file. I'll get back to this later. You can also choose to not have a passphrase, which can be very convenient as it prevents you from typing a passphrase everytime you want to login, but if you are connecting to a university network or computer cluster, I strongly urge you to use a passphrase for security reasons.
+
+After the SSH Key Pair has been created, you'll need to copy the Public Key over to the server you want to use SSH Key authentication for. You can do this in any way you like, but a command line solution is the easiest:
+
+<code>
+$ ssh-copy-id -i ~/.ssh/<id>_rsa.pub <user>@<hostname>
+</code>
+
+Of course not just anyone can transfer a Public Key to a remote. Before the transfer initiates, you will be asked to authenticate via your regular password. This should be the last time you are asked to provide your password when logging in to this particular remote!!
+
+This will add your Public Key to a list of Public Keys tracked by the remote in the ''~/.ssh/authorized_keys'' file on the remote's system.
+
+You should now be able to login with SSH Keys as follows
+
+<code>
+$ ssh -i ~/.ssh/<id>_rsa <user>@<hostname>
+</code>
+
+If you have chosen to use a passphrase, you will be asked for that now. Et voila! You are now logged in a much more secure way! But why is this much more secure?
+
+===How SSH Keys work===
+
+The following is a gross oversimplification of what is actually happening behind the scenes but it gives you the gist.
+
+A Public Key **encrypts** data and a Private Key **decrypts** data. Within a SSH Key Pair, //only// the Private Key can decrypt data that has been encrypted with the associated Public Key. 
+
+A Private Key should NEVER leave your computer and must stay private. NEVER share it with anyone or send it over the internet in any way. A Public Key on the other hand you can distribute freely.
+
+When you attempt to login to a remote, the remote will take a randomly generated number and encrypt it with the Public Key that is associated with your account. It will then send that encrypted number over the network to your machine and asks you if you can decrypt it. If you can, that means that you are in possession of the associated Private Key, and hence you prove that you are you. 
+
+This is more secure compared to the traditional password system because only encrypted data is sent over the network instead of a plain password, and the randomly generated number is different each SSH session.
+

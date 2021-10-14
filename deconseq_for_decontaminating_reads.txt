@@ -1,0 +1,49 @@
+====== DECONSEQ ======
+
+
+Documentation by Sarah Shah, Shelby Williams
+
+Source: [[http://deconseq.sourceforge.net/manual.html]] On perun: /opt/perun/deconseq-standalone-0.4.3 (copy this folder into your working directory)
+
+Warning: If your read file is above 4GB, you must split it. Deconseq's Github page has also been abandoned since 2014, so do not expect an update or a fix for a bug.
+
+This can be used to decontaminate reads using a database of your suspected contaminant sequences. To start, create a fasta file with genomes of suspected contaminates. I recommend using this for fine-combing through data that doesn't have much contaminants to begin with. 
+
+1. Make a bwa index of your contamination fasta file by:
+<code>
+bwa64 index -p prefix_of_your_choice_for_bacteria_index -a bwtsw fasta_file_of_your_suspected_bacteria >bwa.log 2>&1 &
+</code>
+
+You can check the status of your bwa index by using "tail -f bwa.log".
+
+2. Move the 8 index files to the folder "db".
+
+3a. Edit the config file (DeconSeqConfig.pm) as such:
+<code>
+'prefix_of_bacteria_index' => {name => 'Nameofyourchoice', 
+                        db => 'prefix_of_bacteria_index'},
+</code>
+
+3b. Also edit the following lines in the config file:
+<code>
+use constant DB_DIR => '/path/to/deconseq/db/';
+use constant PROG_DIR => '/path/to/deconseq/';
+</code>
+
+This is because of a bug (see https://www.biostars.org/p/182337/). Do not edit anything else.
+
+4. Write a shell script (example below) and qsub it.
+<code>
+#!/bin/sh
+#$ -S /bin/sh
+. /etc/profile
+#$ -cwd
+
+perl deconseq.pl -f Read_file_to_decontaminate.fastq -dbs prefix_of_bacteria_index -out_dir outfolder -keep_tmp_files -i 85  -id testdeconseq
+</code>
+
+The "-f" is your read file, the "-i" is how identical your sequences must be to the bacteria to be thrown out, and the "-id" is a prefix of your choice that will be added to the names of your output read files. The "-dbs" is the handle of your index files.
+
+5. Your shell script's error file should have a log of the number of sequences it is reading.
+
+6. Your output folder should have: one "clean" reads file, one "contaminant" reads file, and a .tsv file of alignments between your read sequences and bacterial sequences.

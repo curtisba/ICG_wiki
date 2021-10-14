@@ -1,0 +1,50 @@
+cat\\
+ -concatenates files into one file\\
+ -can dump the contents of a file to the screen\\
+ 	-be careful with very large files\\
+ 	
+cat country1\\
+canada\\
+Brazil\\
+nigeria\\
+Japan\\
+	
+	
+cat country2\\
+nepal\\
+mexico\\
+Chile\\
+
+
+cat country1 country2 > allcountries\\
+more allcountries\\ 
+canada\\
+Brazil\\
+nigeria\\
+Japan\\
+nepal\\
+mexico\\
+Chile\\
+
+can also do by globbing\\
+
+cat cou* > mycountrylist\\
+more mycountrylist\\ 
+canada\\
+Brazil\\
+nigeria\\
+Japan\\
+nepal\\
+mexico\\
+Chile\\
+
+if you had a directory with 3000 individual fasta files you could combine them
+into a single fasta file by\\
+
+
+cat *fasta > allmyfastafiles\\
+check to see if it worked\\
+grep ">" *fasta |wc -l\\
+
+grep ">" *fasta -c\\
+gives you the number of fastas in each file

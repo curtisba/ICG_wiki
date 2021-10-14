@@ -1,0 +1,47 @@
+By Joran Martijn (June 22nd 2021)
+
+An SSH command can sometimes have multiple flags
+
+<code>
+$ ssh -i ~/.ssh/<id>_rsa -X -Y <user>@<hostname>
+
+# -i for providing a Private Key
+# -X and -Y for enabling working with graphical software and output
+</code>
+
+To type this out every time you want to start a new SSH session with a particular host can be quite a pain!
+
+A smarter way would be to make use of the so-called **SSH Config** file. In this file, located at ''~/.ssh/config'' you can specify per host which flags you want to invoke by default when SSHing into that host. If that file doesn't exist on your system, you can simply create it.
+
+For example, let's say your SSH config file includes
+<code>
+Host perun
+    User joran
+    Hostname perun.biochem.dal.ca
+    IdentityFile ~/.ssh/perun_rsa
+    ForwardX11 yes
+    ForwardX11Trusted yes
+</code>
+
+then the following command
+
+<code>
+$ ssh perun
+</code>
+
+is equivalent to
+
+<code>
+$ ssh -i ~/.ssh/perun_rsa -X -Y joran@perun.biochem.dal.ca
+</code>
+
+As you can see this can save a lot of keystrokes in the long run!
+
+To save even more keystrokes, you can add the following code in your ''.bashrc''
+
+<code>
+# add tab completion for remote hosts in ssh config file 
+complete -o default -o nospace -W "$(grep '^Host' ~/.ssh/config | cut -d' ' -f2)" ssh
+</code>
+
+This will add all the host aliases in your SSH config file to the tab-complete list. This means that you can type ''ssh p'', then hit ''Tab'', and it will autocomplete to ''ssh perun''. (provided no other defined hosts in the SSH Config file start with p)

@@ -1,0 +1,20 @@
+For running this script, you will need a fasta file and a phylogenetic tree. The names of fasta headers and tree branches MUST be identical.
+
+please copy to your folder:
+
+scp /home/dsalas/Shared/TreeSearches_DomainArchitecture/ETE_standAlone.py .
+
+    To execute this program:
+1) export the following paths (which you will easily do by copy and paste)
+   unset PYTHONPATH
+   export PATH=/scratch2/software/Python-2.7.13/bin:$PATH
+   export LD_LIBRARY_PATH=/scratch2/software/Python-2.7.13/lib:$LD_LIBRARY_PATH
+2) Launch the program using the following command line:
+   xvfb-run -a python ETE_standAlone.py <list_of_files_to_process>
+   
+   The format of list_of_files_to_process is: fastafile\ttreefile\n
+   
+ 
+the expected output is a pdf that will look like:
+
+{{:example.jpg?400|}}

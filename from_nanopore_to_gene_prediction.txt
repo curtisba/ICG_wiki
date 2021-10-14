@@ -1,0 +1,319 @@
+======From Nanopore to Gene Prediction: a pathway======
+By Greg and Jon
+
+
+Because nanopore flow cells are expensive, it is common practice to try to sequence multiple samples at once. As part of the protocol, barcode sequences were added to the samples, which can now be used to sort the raw MINION data into individual bins, or folders, specific to the barcode, and thus the sample they’re attached to. 
+
+We will do this a couple of times for accuracy’s sake.
+
+The first tool we will use is deepbinner. This program will take the raw data, identify the barcode, and place it in one of thirteen folders: barcode01 through to barcode12, and unclassified, for sequences that no barcode could be identified for.
+
+The following are **REQUIRED flags**:
+<code>--in_dir</code>[the directory that your minion data has been outputted to]
+
+<code>--out_dir</code> 
+[the directory you want the program to place the folders that it will sort the reads into.]
+
+Deepbinner is designed to be run in parallel with the sequencing, which is to say that in real time, deepbinner can take the output from nanopore and sort it. While we don’t usually do this in this lab, it’s a feature to keep in mind. 
+
+There are a number of additional flags that can help refine the program’s behavior to your needs.
+
+Importantly, the fast5 reads will be physically transferred from the input folder to the new respective folders, so don't be alarmed when the inputs 'disappear'!
+
+**Model presets:**
+
+<code>--native</code>
+preset for EXP-NBD103 read and end models. This is the default.
+
+<code>--rapid</code>
+preset for SQK-RBK004 read start model. 
+
+**Models:**
+
+These are used if the presets are not being used, and can be invoked with:
+
+<code>-s</code> or <code>--start_model</code>
+for a model trained on the starts of reads
+
+and
+
+<code>-e</code> or <code>--end_model</code>
+for a model trained on the ends of reads.
+
+Largely we don’t have to worry about this in this lab.
+
+**Barcoding:**
+
+Two flags:
+
+<code>--scan_size [value]</code> 
+This flag determines how much of a read’s start and end will be examined for barcode signals. **Defaults to 6144.** 
+
+<code>--score_diff [value]</code>
+This flag determines how much of a difference between the best and second best barcode scores will be allowed, in order for classification to occur. **Default is 0.5**
+
+**two model (read start and read end) behaviour:**
+
+Three mutually exclusive flags which determine how lenient the program is in classifying a read. They are, listed here from most lenient to most stringent:
+<code>
+--require_either 
+--require_start 
+--require_both
+</code>
+The first flag will allow the program to classify a read based on the barcode call of either the start or end of the read, so long as they do not disagree.
+
+The second flag will classify a read based on a start barcode, and having an end barcode is optional. **This is the default behaviour**
+
+The third flag requires the same barcode on both ends of the read in order for it to be classified.
+
+**Performance:**
+
+There are four flags here that govern how the program runs. You probably will have no reason to alter these from their default.
+
+<code>--batch_size [value]</code>
+This is the neural network batch size **default is 256**
+
+<code>--intra_op_paraelism_threads [value]</code>
+TensorFlow’s intra_op_parallelism_threads config option. **Default is 12**
+
+<code>--inter_op_parallelism_threads</code>
+TensorFlow’s inter_op_parallelism_threads config option. **Default is 1**
+
+<code>--device_count [value]</code>TensorFlow’s device_count config option. **Default is 1.**
+
+<code>--omp_num_threads [value]</code>	OMP_NUM_THREADS environment variable. **Default is 12.**
+
+**Other:**
+
+<code>--stop</code>Automatically stops deepbinner when it runs out of reads to process. **By default, the program will continue to run until manually stopped.**
+
+<code>-h or --help</code>Shows a help message
+
+Here is an example shell script for deepbinner. A copy can be found at /home/gseaton/public_scripts/
+   <code>#!/bin/bash
+   #$ -S /bin/bash
+   . /etc/profile
+   #$ -cwd
+   #$ -pe threaded 12
+   
+   source activate deepbinner
+   /scratch2/software/Deepbinner-git-June-27-2019/deepbinner-runner.py realtime --in_dir [directory with the raw 
+   MINION data] \
+   --out_dir [the directory you’d like the stored folders placed]
+   --start_model /scratch2/software/Deepbinner-git-June-27-2019/models/EXP-NBD103_read_starts \
+   --end_model /scratch2/software/Deepbinner-git-June-27-2019/models/EXP-NBD103_read_ends --stop
+   source deactivate</code>
+
+
+
+----
+
+===== Single to multi: converting many files into a few =====
+
+
+Nanopore technology generates a truly absurd amount of data files, which can be unwieldy to use, both in the sense of day to day work, as well as for programs like Terminal to handle. Therefore, we will use another script to combine fast5 files into multi fast5 files. This is the default method currently, however programs like Deepbinner work with the individual files, and most of our older data sets are still in single file format, which is important to keep in mind.
+
+   <code>#!/bin/bash
+   #$ -S /bin/bash
+   . /etc/profile
+   #$ -cwd
+   #$ -pe threaded 4
+   
+   source activate ont-fast5-api
+   
+   single_to_multi_fast5 --input_path <path to barcode folder created by deepbinner IE: barcode03> \
+   --save_path <path to the directory the output should be saved as>
+   --filename_base <the prefix for the files, ie Species_barcode03 --batch_size 8000 --recursive
+   
+   conda deactivate</code>
+   
+Some notes:
+ 
+<code>--batch_size</code> Refers to the number of fast5 the program will combine together into one single file. 8000 is a good default to work with.
+
+<code>--recursive</code> will run the shell on both the files in the directory you specify, as well as in any directories that are inside the directory you specified. IE /scratch3/yourname/MINION/deepbinner/barcode03/another_file_level
+
+Additionally, there is another command, multi_to_single_fast5 that can be run using the ont-fast5-api program. As the name implies, it does the reverse process, breaking apart a single multi fast5 file into individual fast5 files. Deepbinner will do this for you if it detects a multi-fast5 file, however it is always good to know how to do it by hand as well.
+
+I have also created a script in /home/gseaton/public_scripts that combines both deepbinner and single-to-multi-fast5 called deepbinner-combopack. This will launch both deepbinner and combine the files into single fast5 files.
+
+
+----
+
+===== Basecalling with Guppy =====
+
+
+Once we've binned the reads, and reduced the number of files for easier use, we now have to //basecall// the fast5 to obtain usable results. Nanopore technology records the electrical differences in the membrane as the DNA strand (or RNA) passes through the pore, and as such, it takes some doing to decode this information into an actual sequence of bases.
+
+Guppy is the current basecaller from Oxford Nanopore Technologies and is currently being developed and updated. 
+
+The input for guppy will be the contents of the binned reads (example: /barcode04/). Below is a sample script that can be found at /home/gseaton/public_scripts/
+
+   <code>#!/bin/bash
+   #$ -S /bin/bash
+   . /etc/profile
+   #$ -cwd
+   #$ -pe threaded 40
+   
+   cd <the directory you want to be working in>
+   
+   /scratch2/software/ont-guppy-cpu-3.1.5/bin/guppy_basecaller \ 
+   -i <input directory (ie /barcode04/)> \
+   -s <output directory> \
+   --flowcell FLO-MIN106 --kit SQK-LSK109 --calib_detect -q 0 --recursive \
+   --num_callers 20 --cpu_threads_per_caller 2 \
+   -barcode_kits "EXP-NBD103" \
+   --trim_strategy dna</code>
+
+Other than the input and output directory, most of this probably will not need to be altered. The flags flowcell and kit refer to the make of the flowcell used as well the as kit used in preparing the sample. Importantly, the num_callers and cpu_threads_per_caller values must multiple together to get the value specified in the line #$ -pe threaded. Here, we're dedicating 2 threads to each of the 20 callers we're using. 
+
+More flags can be found by typing /scratch2/software/ont-guppy-cpu-3.1.5/bin/guppy_basecaller in the command line on perun.
+
+One last note: every set of reads you want to basecall will have to be called upon individually, but it can be placed all in the same shell so you only have to launch it once.
+
+
+----
+
+===== Trimming =====
+
+The next step is to trim the barcodes from the samples. While assembly programs might catch these elements and remove them, it's usually better to remove them as a separate step apart from assembly.
+
+Before this step, however, you should merge all the files together into one single .fastq file for each barcode directory created by guppy, using the 'cat' command.
+
+On the command line, write:
+<code> cat *.fastq > merged_reads.fq</code>
+This will take all files ending in the fastq suffix and merge them into a single file. You can name the output however you like. This is the file you will use for porechop.
+
+Here we use porechop, which uses fastq files and trims off the barcodes. Additionally, by the default outlines here any barcodes detected /within/ a read results in that read being discarded. This is not the only option: porechop has flags that will have the program attempt to split the read containing a barcode middle into two reads and keep them. But this is usually more trouble than its worth.
+
+    <code>#!/bin/bash
+    #$ -S /bin/bash
+    #$ -cwd
+    #$ -pe threaded 40
+    
+    source activate python36-generic
+    
+    porechop \
+    -i <input file> \
+    -o <output file name> \
+    --discard_middle --threads 40 --verbosity 2
+    conda deactivate
+   
+For the output file, it's usually a good idea to include some sort of indication that the file has been trimmed, such as species.fq > species.chop.fq.</codee>
+
+An example script has been provided in /home/gseaton/public_scripts/
+
+===== Filtlong =====
+
+This step is important if you have lots and lots of data. Here, filtlong attempts to take the 'best' of the given data set, and creates a file containing that for later use. The 'bestness' can be determined by the researcher with different flags. For example, if one wanted to take only the most accurate reads, this program would do that for you.
+
+In our lab, we typically use filtlong to obtain the longest reads.
+
+An example script can be found in /home/gseaton/public_scripts
+
+   <code>#!/bin/bash
+   #$ -S /bin/bash
+   #$ -cwd
+   #$ -pe threaded 2
+   
+   export PATH=/scratch2/software/anaconda/bin:$PATH
+   source activate python36-generic
+   
+   filtlong --target_bases <target number of bases you want> --length_weight <value between 1 and 10> \
+   <input file> > <output file name>
+   
+   conda deactivate</code>
+   
+Additional commands can be found [[https://github.com/rrwick/Filtlong#full-usage|here.]]
+
+Example script can be found at /home/gseaton/public_scripts
+
+===== Assembly =====
+====Flye====
+There are a number of assembly tools that can be used. Here, we will use Flye, which is relatively quick, and fairly decent at assembly.
+
+In order to use this, you should have some estimation of your genome size. The script below is a meta-genome assembly, which means that it treats the input as if it is a metagenome. This is useful to make sure mitochondrial DNA (or other plastids) are not accidentally thrown out during the assembly process.
+
+Shell can be found at /home/gseaton/public_scripts/ 
+
+   <code>#!/bin/bash
+   #$ -S /bin/bash
+   . /etc/profile
+   #$ -cwd
+   #$ -pe threaded 30
+   #$ -o leg
+   
+   source activate flye
+   
+   flye --nano-raw \ 
+   <input file. Should be trimmed, and if necessary, filtered using filtlong> \
+   --meta \
+   --genome-size <estimate it in the format 20m> --out-dir <out directory> --threads 30 --iterations 2
+   
+   conda deactivate</code>
+   
+ ====Canu====
+Canu is another assembly program with higher fidelity at the cost of greater run time per assembly. It is specialized in assembling nanopore data and PacBio data, which makes it a good choice for our lab and work. There are three stages to Canu: correction, trimming and assembly. This means it can take the raw nanopore data and process it through most of the steps described above, should one choose. It can also restart an assembly should the worse happen and power or program failure occurs. 
+
+A basic example of the overall layout of canu looks like this: (from the [[https://canu.readthedocs.io/en/latest/tutorial.html|the tutorial]].
+    <code>canu [-correct | -trim | -assemble | -trim-assemble] \
+      [-s <assembly-specificiations-file>] \
+      -p <assembly-prefix> \
+      -d <assembly-directory> 
+      genomeSize=<number>[g|m|k] \
+      [other-options] \
+      [<these are the type of data your feeding it> -pacbio-raw | -pacbio-corrected | -nanopore-raw | -nanopore-corrected] *fastq</code>
+      
+
+The p flag is required, as it has to do with the naming of the output files, while the d flag is not mandatory. Without it, canu will run within the current directory. However, since it is **not possible** to run two assemblies in one directory, it's best to fill this option with something unique. The s flag allows you to import parameters if you have them, which allows commonly used parameters to be replaced with ones specific to your assembly. 
+
+Parameters are written as 'something=value', and the most common ones are maxMemory and maxThreads. genomeSize is always required, while all others can be set to default. 
+
+By default, correction, trimming and assembly are preformed, but it is possible to limit canu to only a specific task if you choose. 
+
+Below is an example script, and can be accessed /home/gseaton/public_scripts:
+    <code>#!/bin/bash
+    #$ -S /bin/bash
+    . /etc/profile
+    #$ -cwd
+    #$ -pe threaded 20
+    
+    export PATH=/opt/perun/jre1.8.0_121/bin:$PATH
+    
+    /scratch2/jon/software/canu-1.8/Linux-amd64/bin/canu \
+    -p <prefix desired> -d <directory name> \
+    maxMemory=[number + SI unit; example: 200g]
+    maxThreads=[number]
+    'corMinCoverage=[number]' 'corOutCoverage=all' 'corMhapSensitivity=high' 'corMaxEvidenceErate=0 to 1' correctedErrorRate=0 to 1' 'genomeSize=<size>' 'corMaxEvidenceCoverageLocal=#' corMaxEvidenceCoverageGlobal=#' oeaMemory=#' batMemory=#'
+    -nanopore-raw <path to the guppy assemblied chopped fastq file \
+    UseGrid=false</code>
+
+//**Parameters explained:**//
+
+<code>corMinCoverage</code> this governs the correction: if set to 0, the correction is non-lossy such that the output is the same length as the input. This keeps errors, which will be removed later in the process. Default is 4.
+
+<code>corOutCoverage</code>: this can have an integer value or 'all'. A higher than-your-total input coverage or All forces canu to correct and assemble all the input. Takes much longer to run.Default is 40.
+
+<code>corMhapSensitivity</code>: Settings: low/normal/high. Governs how sensitivity Mhap is, in a rough fashion. It should be set based on the read coverage: >60 = low, 60 to 30 = normal, <30 = high
+
+<code>corMaxEvidenceErate</code> Setting this limits read correction to only overlaps at or below this value (between 0 and 1). Default is unlimited.
+
+<code>correctedErrorRate</code> Setting is a fraction (between 0 and 1). Default depends on the technology used: 0.045 for PacBio, or 0.144 for Nanopore reads. It is recommended that for low coverage data, that the default value should be increased by 1%, and for high coverage, decreased by 1%. 
+
+<code>genomeSize</code> This is the only **required parameter**. It has no default value, and is based on the size of the genome you're working with.
+
+<code>corMaxEvidenceCoverageGlobal</code> Limits reads used for correction to support at most this coverage. Default is 1.0 times estimated coverage
+
+<code>corMaxEvidenceCoverageLocal</code> limits reads being corrected to at most this much evidence coverage. Default is 10 times estimated coverage. 
+
+<code>[prefix]Memory</code> the memory limit, Set in gigabytes, and by default is unset. prefixes are used to set the memory limits for specific tasks:
+
+Prefix:
+
+<code>oea</code> error adjustment in overlaps
+
+<code>red</code>error detection in reads
+
+<code>bat</code> unitig/contig construction
+
+A fuller list can be found here: [[https://canu.readthedocs.io/en/latest/parameter-reference.html#mhapsensitivity|parameter-reference]]

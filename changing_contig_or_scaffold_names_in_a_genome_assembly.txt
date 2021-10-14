@@ -1,0 +1,68 @@
+Some bioinformatic programs don't like long contig/scaffold names. Plus long names are ugly, time consuming to scan and just take up space.
+
+So, before you do anything with the genome assembly you should consider changing the names of the contigs/scaffolds to something sensibly short like scaffold_1, scaffold_2
+
+<code>
+#!/usr/bin/perl
+
+#numbers contigs sequentially
+
+	$num=1;
+	open (FI,"name_of_genome_assembly.fasta");
+		while (<FI>)
+			{
+			$fline=$_;
+    			chomp($fline);
+    			if ($fline =~/>/)
+    			{
+    			print ">contig_".$num."\n"; #if they are scaffolds then change contig to scaffold
+    			$num=$num+1;
+    			}
+    			else
+    			{
+    			print "$fline\n";
+    			}	
+    		}
+    	close FI;
+ </code>
+   
+ To run this program copy the code into a text file and save as something like **changenames.pl**
+ When you save this file make sure you save it with unix line breaks not mac or windows line breaks.
+ Make sure you have replaced **name_of_genome_assembly.fasta** with the name of the file you want to change.
+ Make the file changenames.pl executable by 
+  chmod 777 changenames.pl
+Then run it by
+  ./changenames.pl > name_of_new_file.fasta
+  
+ Some people may want to preserve information in the original header line. For example
+Consensus_Consensus_Consensus_linear_0_len:1351806_cov:56_len:1352678_cov:61 is a really long name that will cause
+you trouble down the road but maybe you want to preserve the text information 1351806
+
+<code>
+#!/usr/bin/perl
+
+#preserve some bits of information in the header
+
+	
+	open (FI,"name_of_genome_assembly.fasta");
+		while (<FI>)
+			{
+			$fline=$_;
+    			chomp($fline);
+    			if ($fline =~/>/)
+    			{
+    			
+    			$fline =~/len:([0-9]+)/; 
+    			$info=$1;
+    			print ">contig_".$info."\n"; #if they are scaffolds then change contig to scaffold
+    			
+    			}
+    			else
+    			{
+    			print "$fline\n";
+    			}	
+    		}
+    	close FI;
+  </code>
+ 
+If the changes are more complicated than this talk to someone who knows perl or as a last, desperate resort someone who codes in python or some other woefully inadequate programming language.

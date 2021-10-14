@@ -1,0 +1,46 @@
+**BLASTable and PLASTable databases**
+    /db1/blastdb-sep1-2021/nr.pal (V5 format, updated Sep 2021)(Blast)
+    /db1/blastdb-sep1-2021/nt.pal (V5 format, updated Sep 2021)(Blast)
+    /db1/nr-nt-oct-2020-v5/nr.pal (V5 format, updated Oct 2020)(Blast)
+    /db1/nr-nt-oct-2020-v5/nt.pal (V5 format, updated Oct 2020)(Blast)
+    /db1/nr-nt-fasta-oct-2020/nr (full nr in fasta format Oct 2020)(Plast)
+    /db1/nr-nt-fasta-oct-2020/nt (full nt in fasta format Oct 2020)(Plast)
+    /opt/perun/share/extra-data-sets/uniprot/
+   /db1/extra-data-sets/MMETSP/MMETSP_db/ (2018, Kolisko et al. cleaned up with WinstoneCleaner see README file in he directory for more information)
+   /opt/perun/share/extra-data-sets/CAM_P_0001000.nt.fa (old marine metagenome database)
+** DIAMOND:**
+   /scratch3/rogerlab_databases/other_dbs/Diamond_nov102019/nr_dir/nr.dmnd
+** CENTRIFUGE **
+   /scratch2/software/centrifuge-1.0.3/  to use: the base index is "nt", which corresponds to the large nucleotide ncbi database in centrifuge format.
+** EGGNOG :**\\
+Several databases that are available at /opt/perun/share/extra-data-sets/eggnog/ \\
+
+**PRESSED databases : **
+   Full archaea hmm profiles : archaea_DB.hmmer
+   Full bacteria hmm profiles : BACT_DB.hmmer
+   Full eukaryotes hmm profiles : EUK_DB.hmmer    
+   Virus and virus-like: 
+         Picornavirales.hmmer, Retrotranscribing.hmmer, Retroviridae.hmmer, ssDNA.hmmer, ssRNA.hmmer, 
+         ssRNA_negative.hmmer, ssRNA_positive.hmmer, Tymovirales.hmmer, Viruses.hmmer, Nidovirales.hmmer
+   if you need all domains together (bacteria, archaea and eukarya): 
+      /opt/perun/share/extra-data-sets/eggnog/fulleggnogdb/fullEggNOGDB.hmmer
+**NOT PRESSED (individual profiles):**\\
+   hmm for bacteria at /opt/perun/share/extra-data-sets/eggnog/bactNOG_hmm
+   hmm for archaea at /opt/perun/share/extra-data-sets/eggnog/arNOG_hmm
+   hmm for eukaryotes at /opt/perun/share/extra-data-sets/eggnog/euNOG_hmm
+   hmm for bacteria-archaea-eukaryotes at /opt/perun/share/extra-data-sets/eggnog/NOG_hmm
+   
+**EggNOG ANNOTATIONS** are within each of the directories for individual profiles (Not pressed), except for NOG (NOG.annotations.tsv) which is in the /opt/perun/share/extra-data-sets/eggnog
+
+**PANTHER hmm database and fastas:**\\
+PANTHER 14 Classification:
+   /scratch3/dsalas/MMR_BBOs/SPOCK_DATA/PANTHER14.1_HOME/PANTHER14.1_BDBs/PTHR_14.1_bones.tsv
+PANTHER fully pressed panther 14:
+   /scratch3/rogerlab_databases/other_dbs/PANTHER14.1_HOME/PANTHER14.1.hmmer
+PANTHER by individual hmms:
+   /scratch3/rogerlab_databases/other_dbs/PANTHER14.1_HOME/PANTHER14.1_hmm
+PANTHER fasta files by family:
+   /scratch3/rogerlab_databases/other_dbs/PANTHER14.1_HOME/PANTHER14.1_BDBs/
+
+Full PANTHER for blast:
+   /scratch3/rogerlab_databases/other_dbs/PANTHER14.1_HOME/PANTHER14.1_BDBs/catPanthers14.1.fasta

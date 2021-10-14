@@ -1,0 +1,56 @@
+uniq\\
+-information on repeated lines in a file\\
+-generally works better if the lines are initially sorted\\
+-can count number of repeated lines\\
+-can show lines that are repeated\\
+
+more dfruit\\
+apple\\
+pear\\
+peach\\
+peach\\
+apple\\
+blueberry\\
+blueberry\\
+blueberry\\
+apple\\
+grape\\
+blueberry\\
+
+
+uniq dfruit\\ 
+apple\\
+pear\\
+peach\\
+apple\\
+blueberry\\
+apple\\
+grape\\
+blueberry\\
+	-notice that repeated lines have been collapsed into one
+
+sort dfruit |uniq\\
+apple\\
+blueberry\\
+grape\\
+peach\\
+pear\\
+
+how many copies of a line?\\
+sort dfruit |uniq -c\\
+      3 apple
+      4 blueberry
+      1 grape
+      2 peach
+      1 pear
+
+which lines are repeated?\\
+sort dfruit |uniq -d\\
+apple\\
+blueberry\\
+peach\\
+
+which lines are not repeated?\\
+sort dfruit |uniq -u\\
+grape\\
+pear\\

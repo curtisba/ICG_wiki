@@ -1,0 +1,100 @@
+GP using machine learning and extrinsic hints by **DE Salas-Leiva** (last updated Oct-21-2020)\\
+
+Multiple steps need to be carried out for Gene Prediction:
+
+Think about whether you should mask your genome. Masking is used to hide repeat regions, things like transposons. Protist genomes tend to be on the small side and generally don't have as many repeat regions as plant and metazoan genomes. As well, very high and very low GC content can be erroneously masked out. So, before you mask take some time to think about your genome and its characteristics.
+
+GeneMark-ET licence expires often (usually within 3 months), so before you run the workflow make sure you have an up to date licence for GeneMark-ET hidden in your **home** directory:
+id your key is older than 3 months or you are not sure about it, you are better off by downloading a new licence as follows:
+
+   go to http://topaz.gatech.edu/GeneMark/license_download.cgi and download the 64 bits version:  GeneMark-ES / ET 
+   (version) and move it to perun:
+
+ then do the following commands in your home directory in perun: 
+
+   gunzip gm_key_64.gz 
+
+ and finally, change the file name and hide it:
+
+   mv gm_key_64 .gm_key
+
+1) Repeat mask the assembly using a species specific library creating a shell that contains this:
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+cd $PWD
+original_genome=CARP_genome_july16.fasta
+root=CARP_genome_july16
+nthreads=20
+source activate repeatmasker+modeller-no-update
+export PATH=/misc/scratch2/software/anaconda/envs/repeatmasker+modeller-no-update/custom/RepeatModeler-open-1.0.11:$PATH
+mkdir RepeatMasked_genome
+RMdir=RepeatMasked_genome/
+echo 'Modeling and Masking genome'
+BuildDatabase -name $root.index $original_genome
+sleep 30s
+RepeatModeler -pa $nthreads -database $root.index > $root.run.out 
+RepeatMasker -pa $nthreads -xsmall -s -nolow -dir $RMdir -a -inv -lib $root.index-families.fa $original_genome
+source deactivate
+</code>
+2) On the masked assembly map the RNAseq using Hisat2, sort the output and create a depth file:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+cd $PWD
+source activate hisat2
+hisat2-build -f your_masked_genome your_genome_index
+hisat2 -q -p  10 --phred33 --max-intronlen 1000 -k 2 -x yourgenome_index -1 READS_R1 -2 READS_R2 --rna-strandness RF -S your_masked_genome.sam
+source deactivate
+ 
+samtools view -bS -o your_genome.sambam your_masked_genome.sam
+samtools sort your masked_genome.sambam -o yourmasked_genome.sambamsorted.bam
+samtools index your_masked_genome.sambamsorted.bam
+</code>  
+    
+3) Do this step only if you are going to use PASA for prediction validation, otherwise you must skip it: Assembly the RNAseq in genome guided mode with Trinity. This shell is for **Strand Specific RNAseq**
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+cd $PWD
+source activate trinity-2.11-with-workaround
+Trinity --CPU 10 --max_memory 100G --genome_guided_bam yourgenome.fasta.sambamsorted.bam --genome_guided_max_intron 1000 --SS_lib_type RF
+conda deactivate
+</code>
+
+To avoid multiple isoforms that could affect PASA performance you could create a transcript file containing only supertranscripts:
+<code>
+supertranscripts=/misc/scratch2/software/trinityrnaseq-Trinity-v2.6.6/Analysis/SuperTranscripts
+source activate trinity
+$supertranscripts/Trinity_gene_splice_modeler.py --trinity_fasta Trinity-GG.fasta
+conda deactivate
+</code>
+
+
+4) Predict genes using Genemark-ET and Augustus through braker2:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+cd $PWD
+source activate braker-preq
+export VALIDATOR=/opt/perun/PASApipeline-2.0.2/misc_utilities/
+export AUGUSTUS_BIN_PATH=/scratch2/software/braker/Augustus/bin/
+export AUGUSTUS_CONFIG_PATH=/home/dsalas/Augustus-master/config/
+export AUGUSTUS_SCRIPTS_PATH=/scratch2/software/braker/Augustus/scripts/
+export PATH=/scratch2/software/braker/Augustus/bin:/scratch2/software/braker/Augustus/scripts:/scratch2/software/braker/BRAKER/scripts:$PATH
+export GENEMARK_PATH=/scratch2/software/gmes_linux_64-aug-2020/
+braker.pl --species=your_species --bam=yourmasked_genome.sambamsorted.bam --genome=$original_genome --softmasking --cores=20
+</code>

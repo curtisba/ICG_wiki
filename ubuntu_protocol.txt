@@ -1,0 +1,48 @@
+1.How to add user in ubuntu?
+
+	1)open terminal window and type the commond below:
+
+		$sudo adduser michael
+	
+	note: michael is the user name, you can change it to any new user name, but make sure no 		capital letters, no spaces between words.
+
+	2)set password and fill in the full name. This password is for regualr Ubuntu user account.
+
+	3) Optional. Add the user to the sudo list, then the user can have administrative right 	(Only try this if you clearly know this is what you want)
+
+		$sudo usermod -aG sudo michael
+
+	note: again, michael is the user name you want to add into sudo list.
+
+	4)Optional.delete the user name created by accident or unwanted.
+
+		$ sudo userdel -r michael 
+
+2. how to change the password for regualr Ubuntu user account?
+
+	1) login Michael account and type below in terminal window.
+
+		$sudo passwd michael  
+
+3.how to change the password for root if you have been added into the sudo list holding the administrative right?
+
+		$sudo -i
+		$passwd 
+
+
+4.How to install Geneious on Ubuntu?
+
+	1)download the geneious package for linus: https://www.geneious.com/download/
+
+	2)open terminal window, in the directory of download folder
+
+		$chmod +x Geneious_Prime_linux64_2021_1_1_with_jre.sh 
+		$./Geneious_Prime_linux64_2021_1_1_with_jre.sh
+
+if you want to turn off the system immediately 
+
+<code>
+sudo shutdown -h now 
+</code>
+
+<Last updated by Xi Zhang on Sep 4th,2021>

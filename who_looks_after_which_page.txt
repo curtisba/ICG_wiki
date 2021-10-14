@@ -1,0 +1,69 @@
+Distinguishin LGT from contaminants
+
+Using UNIX -Bruce
+
+BLAST and PLAST -Dayana
+
+Taxonomy recovery
+
+Using perun -Bruce
+
+Decontamination using a metagenomics approach -Dayana
+
+Decontamination using read classifier (a.k.a Eukfinder) -Dayana
+
+Multi-gene phylogeny pipeline - Shelby
+
+TransDecoder for transcriptomes
+
+Cleaning of Illumina Paired end reads
+
+Benchmarking Universal Single-Copy Orthologs (BUSCO) 
+
+Trinity for assembling transcript reads
+
+Differential gene expression analysis
+
+Nanopore tools for polishing
+
+Search Protocol for Orthologs of Components of Key molecular systems (SPOCK)...\\ SORRY this is not up and running yet. Please complain with Dayana!
+
+Ortologs searches using panther HMMRs -Dayana
+
+DECONSEQ for decontaminating reads
+
+MINION Sequencing from START to FINISH
+
+ASSEMBLING LONG READ DATA
+
+Dayana Salas - Utility scripts(taxonomy, coloring trees, phylogenetics, mixture models, domain architecture and more) -Dayana
+
+Mapping RNAseq data to your genome
+
+Changing contig or scaffold names in a genome assembly
+
+Using Mitoprot
+
+Perun and Environments -Bruce
+
+Other software locations -Bruce
+
+Databases locations -Dayana
+
+Gene prediction framework -Dayana
+
+CGAL
+
+Extracting a single fasta entry (or multiple) from a multifasta file -Bruce
+
+From Nanopore to Gene Prediction 
+
+Short read assembly 
+
+Python Resources
+
+depth and breadth of coverage
+
+Binning tools 
+
+Visualizing mitochondrial genomes 

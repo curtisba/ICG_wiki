@@ -1,0 +1,35 @@
+Let's say you want to view a tabular blast output file.
+
+You could
+<code>
+$ less <blastfile>
+</code>
+
+But because of line wrapping, the file becomes very hard to read.
+It would be easier to
+
+<code>
+$ less -S <blastfile>
+</code>
+
+Now all lines are unwrapped, which makes it a lot easier to read. However, for some lines some blast output fields may not be aligned vertically with the other lines. To align them, we can use the ''column'' tool:
+
+<code>
+$ column -t $'\t' <blastfile> | less -S
+</code>
+
+Awesome! However, this is quite a long command to type, each time you want to check a blast file. For commonly invoked commands, it becomes worthwile to wrap them into a custom function.
+Add to your ''.bashrc'' :
+
+<code>
+# for easy viewing of tab separated files
+function coltab {
+    column -t -s $'\t' $1 | less -S
+}
+</code>
+
+Now we can simply view tab separated files like tabular blast output as follows:
+
+<code>
+$ coltab <blastfile>
+</code>

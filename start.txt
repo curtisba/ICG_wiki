@@ -1,0 +1,163 @@
+======  Practical Protocols for Probing Protists  ======
+
+[[Using UNIX|[Intro] Using UNIX ]] 
+
+[[Using perun|[Intro] Using Perun ]]
+
+[[RAM and ROM|[Intro] RAM and CPU memory - Perun Queues]]
+
+[[Perun and Environments|[Intro] Perun and Environments ]]
+
+[[Other software locations|[Intro] Other software locations ]]
+
+[[Databases locations|[Intro] Databases locations ]]
+
+[[BLAST protocol|[Intro] BLAST+ and v5 database user guide]]
+
+[[BLAST and PLAST|BLAST and PLAST ]] 
+
+[[Taxonomy recovery|Taxonomy recovery from BLAST/PLAST output]]
+
+====Command Line Tips and Tricks====
+
+The idea of this section is to share command line tips and tricks that you have found made it a lot easier to do bioinformatics work. This can range from basic UNIX things like setting up your terminal environment, configuring your SSH connections or managing your filesystem to explaining new bioinformatics tools and how to work with large scale computer clusters.
+
+[[Setting up your terminal environment|[BASHRC] Setting up your terminal environment ]] 
+
+[[Command line hotkeys|[SHELL] Command line hotkeys]]
+
+[[Viewing tabular BLAST outfiles|[FUNCTIONS] Viewing tabular BLAST outfiles]]
+
+[[Viewing alignment files|[TOOLS] Viewing alignment files]]
+
+[[Handy custom functions|[FUNCTIONS] Handy custom functions]]
+
+[[ls expanded]]
+
+[[wc expanded]]
+
+[[head and tail expanded]]
+
+[[sort expanded]]
+
+[[uniq expanded]]
+
+[[cut expanded]]
+
+[[cat expanded]]
+
+[[nohup]]
+
+[[grep expanded]]
+
+[[awk for tabulated files]]
+
+[[SSH Keys|[SSH] SSH Keys]]
+
+[[Passwords and Passphrases|[SSH] Passwords and Passphrases]]
+
+[[The SSH Config|[SSH] The SSH Config]]
+
+[[Manipulating FASTA FILES]]
+
+
+====DNA Sequence Data Processing====
+
+[[Cleaning of Illumina Paired end reads|[Short reads] Cleaning of Illumina Paired-end reads ]]
+
+[[Short read assembly|[Short reads] Short read assembly ]]
+
+[[depth and breadth of coverage|[Short reads] depth and breadth of coverage]]
+
+[[MINION Sequencing from START to FINISH|[Long reads] MINION Sequencing from START to FINISH]]
+
+[[ASSEMBLING LONG READ DATA|[Long reads] Assembling Long Read Data]]
+
+[[Nanopore tools for polishing|[Long reads] Nanopore tools for polishing]]
+
+[[Decontamination using a metagenomics approach|Decontamination using a metagenomics approach (Anvi’o)]]
+
+[[Decontamination using read classifier (a.k.a Eukfinder)|Decontamination using read classifier (Eukfinder)]]
+
+[[DECONSEQ for decontaminating reads|Decontaminating reads using DECONSEQ]]
+
+[[Binning tools|[Genome] Binning tools ]]
+
+[[Benchmarking Universal Single-Copy Orthologs (BUSCO)|[Genome] Evaluating genome completeness using Benchmarking Universal Single-Copy Orthologs (BUSCO) ]]
+
+[[CGAL|[Genome] Evaluating genome quality using CGAL ]]
+
+[[Using Mitoprot|[Mito genome] Using Mitoprot]]
+
+[[Visualizing mitochondrial genomes|[Mito genome] Visualizing mitochondrial genomes ]]
+
+[[Changing contig or scaffold names in a genome assembly| Changing contig or scaffold names in a genome assembly ]]
+
+[[Extracting a single fasta entry (or multiple) from a multifasta file| Extracting a single fasta entry (or multiple) from a multifasta file]]
+
+[[Getting protein or CDS sequences from a gff file]]
+
+====RNA sequence data, gene expression/prediction====
+
+[[Trinity for assembling transcript reads|[RNA-seq reads] Trinity for assembling transcript reads]]
+
+[[Mapping RNAseq data to your genome|[RNA-seq reads] Mapping RNAseq data to your genome]]
+
+[[Evaluating and comparing transcriptome assemblies with rnaQUAST|[Transcriptome] Evaluating and comparing transcriptome assemblies with rnaQUAST]]
+
+[[TransDecoder for transcriptomes|[Transcriptome] TransDecoder for transcriptomes]]
+
+[[Differential gene expression analysis]]
+
+[[Gene prediction framework]]
+
+[[From Nanopore to Gene Prediction]]
+
+[[Search Protocol for Orthologs of Components of Key molecular systems (SPOCK)...\\ SORRY this is not up and running yet.  Please complain with Dayana!]]
+
+[[Ortologs searches using panther HMMRs|Orthologs searches using panther HMMRs]]
+
+[[Dayana Salas - Utility scripts(taxonomy, coloring trees, phylogenetics, mixture models, domain architecture and more)]]
+
+====Phylogenetic analyses====
+
+[[Multi-gene phylogeny pipeline|[Phylogeny] Multi-gene phylogeny pipeline]]
+
+[[Distinguishin LGT from contaminants|Distinguishing LGT from contaminants]]
+
+[[Running RevBayes with multiple cores]]
+
+====Misc. analyses====
+
+[[Ploidy analysis using ploidyNGS]]
+
+====Programming languages====
+
+[[python_resources|Python Resources]]
+
+====Bioinformatics Q&A====
+
+[[Unix/shell|[Q&A] Unix vi Cheatsheet「Ongoing」]]
+
+[[Ubuntu protocol|[Q&A] Ubuntu system user guide]]
+
+[[Bioinformatics_tools2|[Q&A] How to submit batch scripts/tasks in Perun?]]
+
+[[System protocol|[Q&A] Ubuntu, macOS, virtualBox, local server user guide]]
+
+[[Phylogeny protocol4|[Q&A] How to color my newick tree based on taxa ranks?]]
+
+[[Phylogeny protocol3|[Q&A] How to use acc2tax to pull out hierarchical taxonomic information?]]
+
+
+[[Phylogeny protocol2|[Q&A] How to reduce large phylogenetic datasets redundancy and complexity?「Ongoing」]]
+
+[[Phylogeny protocol|[Q&A] Indexing sequences, trimming alignments, building trees and calculating dN/dS]]
+
+[[Bioinformatics_tools|[Q&A] How to submit the new species to HSDatabase? 「Ongoing」]]
+
+[[Bioinformatics_tools3|[Q&A] How to parse InterProScan database results e.g.Homo_sapiens data?]]
+
+====Dokuwiki maintenance====
+
+[[Who looks after which page]]

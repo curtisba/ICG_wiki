@@ -1,0 +1,15 @@
+**SPOCK** SORRY this is not up an running yet.  Please complain with Dayana!
+
+Documentation by Kate Glennon, Sarah Shah, Shelby Williams
+
+**SPOCK** is a thorough gene annotation and manual curation pipeline. Traditional functional annotation methods tend to underestimate genes or incorrectly assign genes especially for highly divergent sequences. SPOCK gathers data from various databases, find functional profiles of proteins, and use phylogeny to "rank" gene annotations. 
+
+Follow the devs for updates: [[https://www.researchgate.net/project/SPOCK-an-automated-Search-Protocol-for-Orthologs-of-Components-of-Key-molecular-systems]]
+
+Usage:
+
+Inputs:
+
+Outputs: 3 .tsv files listing the "Most Likely", "Likely", and "Unlikely" gene annotations.
+
+**Editing the Config file:**

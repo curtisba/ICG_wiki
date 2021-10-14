@@ -1,0 +1,52 @@
+====== Anvi’o by D. Salas-Leiva updated Feb 12 2021 ======
+
+Please copy and customize the shells available at /home/dsalas/Shared/Anvio7/ \\
+PrepContigsAnvio.1.sh\\
+Creating_CDBAnvio.2.sh\\
+Longreads_MAP.3.sh\\
+ShortReads.MAP.3.sh\\
+DiamondSearch.3.sh\\
+ImportTax.4.sh\\
+MergeProfiles.5.sh\\
+ExportSplits-taxonomy.6.sh\\
+python36-acc2taxextraplusv2plast.py\\
+
+The number in the shell indicates the order in which these must be launched. Shells that have the same number can be launched simultaneously, if desired. Before launching Importax and remaining shells: Diamond output needs to be ready, then apply:\\
+source activate python36-generic\\
+python python36-acc2taxextraplusv2plast.py contigs.predicted_orfs.tsv\\
+then you can launch Importax.4.sh and the remaining shells. If you only have either short or long reads, then no merge is needed but you should import the profile (ask Dayana)
+
+ 
+**Using the GUI:**
+After the wrapper is done, follow the instructions that show up at the end:
+ 
+Either use a remote Desktop client software such as X2go to “dig a tunnel” to a perun node or type in: 
+“ssh -X -Y -L 8080:localhost:8080 youraccount@perun.biochem.dal.ca” in a new terminal. 
+Set the path by pasting in the following lines:
+
+source activate anvio
+
+**To open the GUI of Anvi’o**
+
+ 
+anvi-interactive -p YourFASTA_ProfDir/PROFILE.db -c YourFASTA.db --taxonomic-level t_phylum
+ 
+t_phylum will categorize the contigs in domains, which is enough for removing bacterial or archaeal sequences. Other options include: t_class, t_species, but these are not very accurate as this wrapper only uses bacterial-ORF identifiers.
+ 
+Press “DRAW” in the browser window that pops up to see the graph. You can re-colour the layers and taxons, you can mouse over on contigs to see their lengths, functions, etc. You can load bins that were pre-made by MyCC by going to “Load bins”, or create your own bins by double-clicking on branches, groups of contigs, or individual contigs. After you save the bins, close the window, cancel the anvi-interactive command in the terminal, and “summarize” the bins made by MyCC or the ones you made by:
+ 
+anvi-summarize -p YourFASTA/YourFASTA_ProfDir.db -c YourFASTA.db -C YourBinCollectionNameorMyCC -o YourSummaryName
+ 
+You can then see that a .fa file of your binned contigs has been made in the YourSummaryName folder. You can further “refine” your bins by:
+ 
+anvi-refine -p YourFASTA/YourFASTA_ProfDir.db -c YourFASTA.db -C YourBinCollectionNameorMyCC -b The_specific_bin_name --taxonomic-level t_phylum
+ 
+____________________________________________________________________
+ 
+**Rerunning Anvi’o after the pipeline breaks at:**
+ 
+InterProScan: submit IPR_stalone.py
+Acc2tax: submit acc2tax.py
+Metabat: Metabat_MyCCparser.py
+ 
+If you need to rerun Anvi’o after the assembly has been made, make a copy of it and save it somewhere else. When Anvi’o reruns, the assembly header names will change and may cause problems later down the line.

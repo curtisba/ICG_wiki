@@ -1,0 +1,48 @@
+**FINDING SOFTWARE THAT IS NOT UNDER CONDA**
+
+If you can not find software under CONDA environments, you could check in these places before to ask for an install:\\
+
+   /opt/perun/bin/ 
+   **Note: ** Some software here may be available directly in the environmental path, so it'll show up when you type: which software_name in the command line
+
+   /scratch2/software/
+
+
+**if you are a fan of iqtree:**\\
+There are several versions of the program and you should use the specific builds for perun, it currently has installed versions:\\
+   1.6.1 (/opt/perun/bin/iqtree-1.6.1-intel)
+   1.5.5 (/opt/perun/bin/iqtree-omp-1.5.5-intel-build)
+   these are builds that take advantage of the architecture of the cluster and perform task faster the the other 
+   executables in any other directory
+
+   if you use 1.5.5 then set this in your shell script
+   source /scratch2/software/intel-build-2017/set-path
+
+
+
+** if you are fan of BLAST or PLAST **\\
+
+Blast and Plast use ncbi V4 formated databases: these must have been built with the flags **-parse_seqids -hash_index**):\\
+
+To know the paths of the most updated databases for programs in this snippet click **[[databases_locations|]]**\\
+
+1- the most updated version of **BLAST** in under conda\\
+2- the most updated version of **PLAST** is available directly in the environmental path\\
+
+
+** if you are fan of BLAT or LAST **\\
+
+1- **BLAT** is available directly in the environmental path. To use it, you have to build a database. The simplest way is by typing this command:
+   faToTwoBit in.fa out.2bit , where in.fa is your database_fastafile and out.2bit is the output_name
+   then run the program:
+   blat out.2but query_file -out=pslx [options] outputname.pslx
+
+2- **LAST** is available at /scratch2/software/last-941/bin/\\
+   Build a lastable database:
+   lastdb [options] output-name fasta-sequence-file(s)
+   then you are golden to use the executable that suits your needs
+   
+** if you are fan of DIAMOND/ac-DIAMOND, centrifuge or kraken-HLL**\\
+All of these programs are under their own conda environment.
+
+To know the paths of the most updated databases for programs in this snippet click **[[databases_locations|]]**\\

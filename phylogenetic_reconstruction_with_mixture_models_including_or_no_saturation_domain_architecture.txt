@@ -1,0 +1,10 @@
+
+
+
+
+
+/home/dsalas/Shared/TreeSearches_DomainArchitecture
+program: TreeSearch_DomainArchitecture.py
+configuration file: TreeSearch_DomainArchitecture.Conf
+test files: test1.fasta, test2.fasta, list_of_fasta_files
+model definition only available for 4 bins from Susko and Roger (2007) (IqtreeC*.nex)

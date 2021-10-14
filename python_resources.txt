@@ -1,0 +1,32 @@
+Python Resources
+By: Shelby Williams
+
+Below is a list of resources that I used when learning python. Please feel free to update this list with other resources that you find!
+
+**Learn Python the Hard Way**
+
+This book exists in PDF format somewhere on the web. I haven't added a link because the book author keeps changing where they provide the free version.
+
+This is a great introduction to python and programming as a whole! It will get you comfortable with typing and checking your code for errors.
+
+
+**Codecademy**
+www.codecademy.com
+
+Highly interactive, engaging and fun! A great way to begin to understand how code works and to reinforce the basics.
+
+**EdX**
+https://www.edx.org/course/introduction-to-computer-science-and-programming-using-python-0
+
+Learn the basics, and then begin to apply your knowledge to real-world problems!
+
+**Coursera**
+https://www.coursera.org/specializations/python?utm_source=gg&utm_medium=sem&campaignid=380484307&adgroupid=61105972056&device=c&keyword=python%20coursera&matchtype=b&network=g&devicemodel=&adpostion=1t1&creativeid=305348909270&hide_mobile_promo&gclid=CjwKCAiAwojkBRBbEiwAeRcJZHsq83zsV2NWRbXai8zNNkFVSCHnc8pb7vIGdgOJHmaAS7shH3uHcBoCZloQAvD_BwE
+
+Another great lecture series designed to explain how code is working. Lots of helpful assignments to get you thinking about how to apply your problem-solving skills.
+
+**The Rosalind Problems**
+http://rosalind.info/problems/locations/
+
+Now that you know the basics of python, try to apply your knowledge to common biological problems! Note: these problems get really challenging!
+

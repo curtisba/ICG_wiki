@@ -1,0 +1,85 @@
+**BUSCO: Benchmarking Universal Single-Copy Orthologs**
+
+Documentation by Dayana Salas-Leiva (last update 04-13-2020)
+
+Web:http://busco.ezlab.org/
+
+You can check the completeness of your genome by picking out single-copy orthologs. **BUSCO** runs **tBLASTn**, **AUGUSTUS**, and **HMMER 3** based on single-copy orthologs from the **OrthoDB** database. 
+
+There are two main dataset versions of busco: **odb9** (contains 303 orthologs only compatible with Busco3) and **odb10** (contains 255 orthologous only compatible with Busco4)
+
+The following are examples of a shell script for genomic and a proteomic search:
+
+***  BUSCO 3 ***
+
+** Genomic: **
+
+   #!/bin/bash
+   #$ -S /bin/bash
+   ./etc/profile
+   #$ -pe threaded 1
+   #$ -cwd
+   cd $PWD
+   #busco3.0.0
+   source activate busco-3
+   export AUGUSTUS_CONFIG_PATH="/home/dsalas/Shared/BUSCO/config"
+   run_BUSCO.py -i <fasta_file> -o <output_dir_name> -l /home/dsalas/Shared/BUSCO/eukaryota_odb9 -m geno --cpu 1
+   conda deactivate
+
+** Proteomic: **
+
+   #!/bin/bash
+   #$ -S /bin/bash
+   ./etc/profile
+   #$ -pe threaded 1
+   #$ -cwd
+   cd $PWD
+   #busco3.0.0
+   source activate busco-3
+   export AUGUSTUS_CONFIG_PATH="/home/dsalas/Shared/BUSCO/config"
+   run_BUSCO.py -i <fasta_file> -o <output_dir_name> -l /home/dsalas/Shared/BUSCO/eukaryota_odb9 -m prot --cpu 1
+   conda deactivate
+
+
+** * BUSCO 4.0.5 * **
+
+** Genomic: **
+   #!/bin/bash
+   #$ -S /bin/bash
+   ./etc/profile
+   #$ -pe threaded 1
+   #$ -cwd
+   cd $PWD
+   source activate busco
+   #BUSCO 4.0.5
+   export AUGUSTUS_CONFIG_PATH="/home/dsalas/Shared/BUSCO/config"
+   busco -i <input_scaffolds_file> -o <output_dir_name> -l /home/dsalas/Shared/BUSCO/eukaryota_odb9 -m geno --cpu 1
+
+
+**Proteomic:**
+
+   #!/bin/bash
+   #$ -S /bin/bash
+   . /etc/profile
+   #$ -pe threaded 1
+   #$ -cwd
+   cd $PWD
+   source activate busco
+   #BUSCO 4.0.5
+   export AUGUSTUS_CONFIG_PATH="/home/dsalas/Shared/BUSCO/config"
+   busco -i <predicted protein fasta> -o <output_dir-name> -l /home/dsalas/Shared/BUSCO/eukaryota_odb9 -m prot --cpu 1
+
+
+
+
+**Note**: Take out the mitochondrial genome before running this analysis.
+
+**In the output folder:**
+
+-3 folders for the outputs of tBLASTn, AUGUSTUS, and HMMER, and a folder containing the single-copy BUSCO sequences. If you want to look into the details of the amino acid or nucleotide sequences that were predicted by AUGUSTUS and align them manually (for example, against a transcript contig), pick out the .faa or .fna files from the directory augustus_output/extracted_proteins
+
+-"short summary" file showing how many BUSCO genes were found, how many were complete, fragmented, etc.
+
+-"full table.tsv" showing a list of your contigs matched to BUSCO IDs.
+
+-"missing busco list" showing a list of BUSCO genes that were not found in your genome.

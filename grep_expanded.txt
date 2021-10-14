@@ -1,0 +1,58 @@
+grep 
+
+grep some_string file
+grep hypo multifastafile
+	-includes some non hypothetical lines
+grep hypothe multifastafile
+	-increase the specificity of the string to match
+
+grep –i some_string file
+	-ignores case
+	grep trap multifastafile
+		-only finds one line
+	grep -i trap multifastafile
+	
+grep some_string file |grep some_string
+	-string together (pipe) several greps 
+grep -i trap multifastafile  |grep TAXI
+grep -i trap multifastafile  |grep TAXI |grep For
+
+grep –v some_string file
+	-finds the lines WITHOUT the string
+grep -i trap multifastafile  |grep TAXI |grep -v Rev
+
+grep –i some_string  file--color
+	grep -i trap multifastafile  |grep --color TAXI 
+	grep -i trap multifastafile  |grep --color TAXI |grep -i forwa --color
+		-color works on last match
+	
+	
+grep -c some_string file
+	-counts the number of lines
+	grep 60S BS_named.gff3 --color
+	grep 60S BS_named.gff3 -c gives 3568
+	
+grep -n some_string file
+	grep 60S BS_named.gff3 -n
+	grep -n 60S BS_named.gff3
+	grep -n 60S BS_named.gff3 |more
+	
+grep ">" tursiops.fa
+grep > tursiops.fa
+	-won't work because of the special character
+grep ">" tursiops.fa -c
+	-fast way to find how many individual fasta files in a multifasta file
+	
+grep \> tursiops.fa -c
+grep '>' tursiops.fa
+
+
+ 
+can use regular expression but not covered here - just a taste
+grep ^G tursiops.fa --color
+	^ means must be at beginning of line
+grep G$ tursiops.fa --color
+	$ means must be at the end of the line
+grep ^G[HMP] tursiops.fa --color
+	[] hold character classes H or M or P in second postion
+grep ^G[HMPL][G] tursiops.fa --color

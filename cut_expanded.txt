@@ -1,0 +1,53 @@
+cut\\
+-can split lines into chunks\\
+	-can be based on columns or a delimiter
+
+	
+cut on columns\\
+
+>ENSTTRP00000013322 pep:novel scaffold:turTru1:scaffold_96599:113:67656:1 gene:ENSTTRG00000014049 transcript:ENSTTRT00000014049\\
+>ENSTTRP00000011169 pep:novel scaffold:turTru1:scaffold_95329:31817:82879:1 gene:ENSTTRG00000011774 transcript:ENSTTRT00000011776\\
+>ENSTTRP00000003887 pep:novel scaffold:turTru1:scaffold_112896:166326:170254:1 gene:ENSTTRG00000004129 transcript:ENSTTRT00000004129\\
+
+
+cut -cfirst_number -second_number file\\ 
+
+
+grep ">" tursiops.fa  |cut -c1-19\\
+>ENSTTRP00000013322\\
+>ENSTTRP00000011169\\
+>ENSTTRP00000003887\\
+
+grep ">" tursiops.fa  |cut -c1-26\\
+>ENSTTRP00000013322 pep:no\\
+>ENSTTRP00000011169 pep:no\\
+>ENSTTRP00000003887 pep:no\\
+
+
+cutting on columns works nicely if everything is lined up in neat columns\\
+cut on delimiter\\
+delimiter inside ""\\
+	-default delimiter is a tab
+
+grep ">" tursiops.fa |cut -d" " -f1\\
+>ENSTTRP00000013322\\
+>ENSTTRP00000011169\\
+>ENSTTRP00000003887\\
+
+
+
+grep ">" tursiops.fa |cut -d" " -f1-3\\
+>ENSTTRP00000013322 pep:novel scaffold:turTru1:scaffold_96599:113:67656:1\\
+>ENSTTRP00000011169 pep:novel scaffold:turTru1:scaffold_95329:31817:82879:1\\
+>ENSTTRP00000003887 pep:novel scaffold:turTru1:scaffold_112896:166326:170254:1\\
+
+
+grep ">" tursiops.fa |cut -d" " -f3\\
+scaffold:turTru1:scaffold_96599:113:67656:1\\
+scaffold:turTru1:scaffold_95329:31817:82879:1\\
+scaffold:turTru1:scaffold_112896:166326:170254:1\\
+
+grep ">" tursiops.fa |cut -d" " -f3 |cut -d":" -f3\\
+scaffold_96599\\
+scaffold_95329\\
+scaffold_112896\\

@@ -1,0 +1,47 @@
+Below are the instructions for **three** scripts that will help you get the taxonomy and are compatible with other programs in the Utility folder.
+
+__First__: 
+If you want to get the taxonomy of a multi-sequence fasta file, you need to homogenize the fasta header for each sequence and a carry out a safety check that your input sequences do not contain characters that are not in the aminoacid and nucleic acid alphabets.
+
+copy the following programs to one of your directories:
+
+scp /home/dsalas/Shared/Taxonomy_onto_Trees/FastaHeaders_n_Alphabet.py .\\ 
+scp /home/dsalas/Shared/Taxonomy_onto_Trees/Taxon4Tree.py .\\ 
+scp /home/dsalas/Shared/Taxonomy_onto_Trees/ColoringTreewithTaxa.py \\ 
+
+
+__All those programs have instructions at the end of each of them, but in short:__
+
+python FastaHeaders_n_Alphabet.py <LIST> <type 'full' or 'accession'>
+
+LIST is a file containing the fasta file names to be processed.\\ 
+Typing 'full' will keep the entire fasta header and typing 'accession' it will keep only the first part of the name. I recommend to type 'full'.
+
+
+It will output 2 files:
+
+
+1- '*.Source_Annotation': a relational file with the original names and the new names.\\ 
+2- A newly processed fasta file that will be used to get the taxonomy.
+
+__Second__: 
+You need to obtain the taxonomy for those files. For that run the command line below:  (__WARNING: Taxon4Tree.py will work **faster** in your own desktop than in perun (this is due to firewall protocols). if you want to run it in your own desktop, make sure you have python and biopython installed and a good internet connection.__)
+
+
+python Taxon4Tree.py <NEWLIST> <type 'full' or 'accession'>
+
+NEWLIST is the file containing the fasta files proccessed with the program above.\\ 
+The choice of 'full' or 'accession' must coincide with your choice when you applied FastaHeaders_n_Alphabet.py.
+
+It will output a file with the suffix '_tax'. This file contains all the information needed to be mapped onto a phylogenetic tree. The tree MUST be constructed using the fasta files in NEWLIST making sure that the headers of the sequences didn't change (using **__fasta format output__** for mafft, bmge or trimal)
+
+__Third:__
+
+You need to create two lists, one containing the outputs ('*_tax') from the taxonomy search, and a second list containing the trees to which those output belong.  Both lists MUST be coordinated, in such manner that the taxonomy information correspond to a tree that was built with the fasta file that was used to get the taxonomy in the first place.
+
+python ColoringTreewithTaxa.py <list_of_taxomic_files> <list_of_trees>
+
+
+If you need more information, please check a the end of each program.
+
+

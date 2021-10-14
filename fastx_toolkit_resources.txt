@@ -1,0 +1,186 @@
+FASTX-toolkit
+http://hannonlab.cshl.edu/fastx_toolkit/
+	-used mainly to manipulate sequence reads from illumina sequencers
+	-most of the tools can handle fasta and fastq files
+
+	-commandline
+		-on perun
+			-conda environment
+				-source activate fastx_toolkit
+					fastx_clipper -h
+	-online graphical interface
+http://hannonlab.cshl.edu/fastx_toolkit/galaxy.html
+https://usegalaxy.org/
+
+	-local downloads
+http://hannonlab.cshl.edu/fastx_toolkit/download.html
+	
+
+
+
+
+DOES NOT WORK WITH LOWERCASE nucleotides
+
+
+DOES NOT WORK with interleaved sequences
+
+DOES NOT WORK WITH AMINO ACIDS
+
+-common syntax
+	-i for input file
+	-o for output file
+	-h for help 
+
+fastx_clipper
+[-l N]       = discard sequences shorter than N nucleotides. default is 5
+
+more p2.fasta 
+\\ 
+  >sequence1 blahblah
+  ACGTACGTACGTACGTACGTACGTT
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >myfavourite
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >myfav2
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >contig23 acanth
+  AGTAGTGACTGAGTAATAGACGTAG	
+
+fastx_clipper -i p2.fasta -o blah -l 50
+
+more blah
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+
+fastx_renamer
+	-renames the sequences
+		-n TYPE
+			-default or SEQ uses sequence as name
+			-COUNT uses counter
+	-the extra information on the header line is lost
+
+more p2.fasta 
+  >sequence1 blahblah
+  ACGTACGTACGTACGTACGTACGTT
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >myfavourite
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >contig23 acanth
+  AGTAGTGACTGAGTAATAGACGTAG
+
+fastx_renamer -i p2.fasta -o p2renamed.fasta -n SEQ
+  >ACGTACGTACGTACGTACGTACGTT
+  ACGTACGTACGTACGTACGTACGTT
+  >TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >AGTAGTGACTGAGTAATAGACGTAG
+  AGTAGTGACTGAGTAATAGACGTAG
+
+fastx_renamer -i p2.fasta -o p2renamed.fasta -n COUNT
+  >1
+  ACGTACGTACGTACGTACGTACGTT
+  >2
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >3
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >4
+  AGTAGTGACTGAGTAATAGACGTAG
+
+
+
+fasta_formatter
+	-can change multiline sequences (interleaved) to single line sequences (sequential)
+	-can change the length of interleaved lines
+
+more p5.fasta 
+  >M86863.1
+  GTAACATGACGTTGACCGTGCGGGGCTACATGTAGCAGCTGGGTGTGCTAACTACGGATACATGCCTACA
+  ACCCCCACAAGTCAAGACCATTGCGACGCGGAAACAGGAGCCCGCAAAAGAGGAGAAAAACAACGGCGAG 
+  >seq2
+  ACTCGGGGGCGGAGTGGGTCACGTGACTTTCCTTTTTCCCCTCACCTGGCCCGCTCCGTCCATATCTCTG
+  TCGTACAAGACAATATTGTCGCAACGCAAAAGGTCCATAAATTACTGGGTAGACGCAACTCTATTTGAAG
+  GCAACCTACCGTTTGCTTTTAGTGTTTTGGTTTTGTTACCATATCCAAAAAAAAACCATATATCCAAAAA
+  TTCCGCTGCACCATCTCTTCTTCTCTCCATCAACTACCCCTGCGGAGAAATTCACACCACAGTTACAATG
+
+
+fasta_formatter -i p5.fasta -o p5oneline
+  >M86863.1
+  GTAACATGACGTTGACCGTGCGGGGCTACATGTAGCAGCTGGGTGTGCTAACTACGGATACATGCCTACAACCCCCACAAGTCAAGACCATTGCGACGCGGAGGG
+  >seq2
+  ACTCGGGGGCGGAGTGGGTCACGTGACTTTCCTTTTTCCCCTCACCTGGCCCGCTCCGTCCATATCTCTGTCGTACAAGACAATATTGTCGCAACGCAAAAGGTC
+
+fasta_formatter -i p5.fasta -o p5.20 -w 20
+  >M86863.1
+  GTAACATGACGTTGACCGTG
+  CGGGGCTACATGTAGCAGCT
+  GGGTGTGCTAACTACGGATA
+  CATGCCTACAACCCCCACAA
+  GTCAAGACCATTGCGACGCG
+  GAAACAGGAGCCCGCAAAAG
+  AGGAGAAAAACAACGGCGAG
+  >seq2
+  ACTCGGGGGCGGAGTGGGTC
+  ACGTGACTTTCCTTTTTCCC
+  CTCACCTGGCCCGCTCCGTC
+  CATATCTCTGTCGTACAAGA
+  CAATATTGTCGCAACGCAAA
+  AGGTCCATAAATTACTGGGT
+  AGACGCAACTCTATTTGAAG
+  GCAACCTACCGTTTGCTTTT
+  AGTGTTTTGGTTTTGTTACC
+  ATATCCAAAAAAAAACCATA
+  TATCCAAAAATTCCGCTGCA
+  CCATCTCTTCTTCTCTCCAT
+  CAACTACCCCTGCGGAGAAA
+  TTCACACCACAGTTACAATG
+
+
+
+fastx_trimmer
+	-first and last base to keep
+		-default is entire read
+		-f first base to keep
+			-1=first base
+		-l last base to keep
+			-based on the entire read before -f
+
+more p6.fasta 
+  >seq1
+  AAAAAAAAAATTTTTTTTTTGGGGGGGGGG
+  >seq2
+  CCCAAATTTGGGCCCAAATTTGGG
+
+fastx_trimmer -i p6.fasta -o p6.trimmed -f 10
+  >seq1
+  ATTTTTTTTTTGGGGGGGGGG
+  >seq2
+  GGGCCCAAATTTGGG
+
+fastx_trimmer -i p6.fasta -o p6.trimmed -f 10 -l 15
+  >seq1
+  ATTTTT
+  >seq2
+  GGGCCC
+
+
+
+
+fastx_reverse_complement
+	-reverse complements the sequences
+		-does both
+more p7.fasta 
+  >seq1
+  AAAAAAAAAAGGGGGGGGGG
+  >seq2
+  AGAGAGTT
+
+
+fastx_reverse_complement -i p7.fasta -o p7rc
+  >seq1
+  CCCCCCCCCCTTTTTTTTTT
+  >seq2
+  AACTCTCT

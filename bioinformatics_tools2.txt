@@ -1,0 +1,167 @@
+Usually Perun can be used to submit jobs via: qsub -q 768G-batch script.sh or qsub -q 256-batch script.sh; However, what if you have thousands of scripts waiting for running, are you going to submit thousands of shell script manually? That is definitely terrible. Here will introduce two approaches to realize submitting batch scripts/tasks in Perun. It depends on your own preference to use one of which. 
+ 
+
+**Approach One: submit for loop shell script**
+
+<code>
+
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -o logfile
+#$ -pe threaded 20
+#export PATH=/scratch2/software/anaconda/bin:$PATH
+
+while read line
+do
+
+mafft --auto --thread 20 /misc/scratch2/####/$line.fasta >/misc/scratch2/####/aligned/$line.aligned.fasta
+
+/scratch2/software/anaconda/envs/bmge/bin/bmge -i /misc/scratch2/####/aligned/$line.aligned.fasta -t AA -m BLOSUM30 -of /misc/scratch2/xizhang/####/trimmed/$line.aligned.trimmed.fasta
+
+FastTree /misc/scratch2/####/trimmed/$line.aligned.trimmed.fasta > /misc/scratch2/####/fasttree/$line.aligned.trimmed.newick
+
+done <$1
+</code>
+
+This script need you have a list of sequence name and sensitive with only ID. Run the script like this:
+
+<code>
+#pure name list file of your fasta, e.g.
+Gene1
+Gene2
+Gene3
+
+#This can be easily acquired via :
+grep '>' ###.fasta|sed 's/>//g' > name_list.txt
+
+# If your FASTA seq includes gene descriptions e.g., directly retrieved from NCBI
+> gen1 hypothetical protein balabalala
+TAGTTAGTCGATCGTACGTA
+
+Simply run: awk '{print $1}' seq.fasta > clean_name_id.fasta
+
+#Then run the shell script.
+chmod +x shell.sh
+./shell.sh name_list.txt
+</code> 
+
+
+**Approach Two: submit array jobs**
+
+Below is a real case to BLAST thousands of genes against NCBI-nr database. However, it could take weeks running if we BLAST whole gene against the nr database directly. 
+
+<code>
+
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -o logfile
+#$ -pe threaded 10
+source activate blast
+export BLASTDB=/db1/blastdb-sep1-2021/
+DB=nr
+
+blastp -db $DB -query /misc/scratch2/XXXX/XXX.fa -out /misc/scratch2/XXXX/XXX.tsv -num_threads 10 -outfmt "6 qseqid sseqid evalue pident qcovs length slen qlen qstart qend sstart send stitle salltitles" -evalue 1e-10 -max_target_seqs 1000
+
+conda deactivate
+</code>
+
+But what if we split the query dataset into subset data and then do the blast, it would be more efficient to use the CPU of Perun and less time needed.For example, we have 2000 genes to blast against NCBI-nr. The script below will run array jobs, i.e., multiple tasks simultaneously. via using ${SGE_TASK_ID}. Here is a real case to demonstrate the usage.
+
+<code>
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -t 1-2000
+#$ -o logfile
+#$ -pe threaded 1
+
+source activate blast
+export BLASTDB=/db1/blastdb-sep1-2021/
+DB=nr
+
+blastp -db $DB -query /misc/scratch2/####/${SGE_TASK_ID}.fa -out /misc/scratch2/####/${SGE_TASK_ID}.tsv -num_threads 1 -outfmt "6 qseqid sseqid evalue pident qcovs length slen qlen qstart qend sstart send stitle salltitles" -evalue 1e-10 -max_target_seqs 100000
+
+conda deactivate
+</code>
+
+If you are familiar with ${SGE_TASK_ID}, you will know the real difficult is how to prepare each fasta file with the number as the name, e.g.1.fa, 2.fa, 3.fa, 4.fa. I collect some small but efficient scripts to realize that.
+
+    * Method one: using 'csplit' function
+
+  <code>
+  csplit -ks -n 4 -f 0 ###.fasta '/\>/' {2000}
+  
+  # This will split the FASTA file into 2000 single fasta file with the file name like this 01,02,03..
+  # So in this case: -query /misc/scratch2/####/${SGE_TASK_ID}.fa
+  #  will be renamed to 
+  # -query /misc/scratch2/####/**0**{SGE_TASK_ID}
+  # Technically, you can change 0 to whatever you want it is just a file name prefix.
+  </code>
+  
+
+The specific usage and the meaning of csplit function can be found here:
+ https://man7.org/linux/man-pages/man1/csplit.1.html. People might ask what if I don't want to split them into one for each, how about 10 genes together in file. Absolutely! Try these three steps:
+
+<code>
+# Step ONE, you need a pure name list file of your fasta, e.g.
+Gene1
+Gene2
+Gene3
+
+#This can be easily acquired via :
+grep '>' ###.fasta|sed 's/>//g' > name_list.txt
+
+#Step TWO use csplit to cut the name_list.txt into whatever-the-number-you-want pieces.
+csplit -ks -n 4 -f 0 name_lsit.txt 10 {1999}
+# The number 10 here is to split the name file every ten lines. you can change to e.g., 4 lines, 6 lines..
+
+# Step Three
+
+# use for loop to run the python script  
+index_header_to_seq.py (https://github.com/zx0223winner/NoBadWordsCombiner/blob/main/Tutorial/index_header_to_seq.py
+
+#!/bin/bash
+#$ -S /bin/bash
+
+for f in 0*
+do
+python3 index_header_to_seq.py ####.fasta $f $f.fa 
+done
+
+# it tested OK.
+</code>
+
+    * Method two: Run shell script split.sh
+
+<code>
+#!/bin/bash
+# ./split.sh
+#while IFS= read line
+while read line
+   
+do
+if [[ ${line:0:1} == '>' ]] then
+outfile=${line#>}.fa
+echo $line > $outfile else
+echo $line >> $outfile fi
+
+# be careful this can only be run once, because: '>' is to run once, 
+# but '>>' is to continucal give value to the file
+
+# display $line or do somthing with $line #echo "$line"
+done < $1
+
+</code>
+
+How to test your data, simply run 
+<code>
+./split.sh ##2000.fasta
+# This also will split the large FASTA file into each pieces.
+</code>
+
+
+<Last updated by Xi Zhang on Oct 8th,2021> 

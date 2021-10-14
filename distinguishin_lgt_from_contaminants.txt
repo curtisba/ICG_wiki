@@ -1,0 +1,18 @@
+Considerations by Andrew Roger
+
+Since many of you are interested in (or at some point will try to) decontaminate your transcriptome data or genome data, I just thought it might be helpful if I wrote out some thoughts I have about how to decide whether or not a particular assembled transcript or genomic region is actually contamination from another organisms (e.g. bacterium or something else) versus an LGT.
+
+I’ll describe the case for a transcript (RNA-Seq) first.  
+
+Typically if you are concern a sequence is contaminating your RNA-Seq data and you specified that you wanted polyA+ selection in the library preparation then it is more likely to be an lateral gene transfer (LGT) (i.e. a true gene in your organism) if:
+
+1) the RNA-Seq coverage of the transcript is reasonable.  Prokaryotic contaminating sequences should be very low coverage because they won’t have extensive polyA tails (and should be selected out). 
+2) there is evidence for a polyA tail on the transcript (note that sometimes the trimming software removes these from the end of the transcript so you might have to look at raw reads to find it). Note if you don’t find a polyA then it doesn’t mean anything - it could be a real gene or a contaminant
+3) the codon usage of the protein gene should be similar to the codon usage of the organism of interest.  That is if you look at core eukaryotic genes (Bordor genes) you can make a codon usage table and compare the transcript of interest to that codon table.  Contaminants should have notably different codon usage.
+4) the percent identity of the amino acid sequence to the nearest prokaryotic sequence is relatively low ( <90 %).  Contaminants tend to be VERY similar to prokaryotic sequences in the database (>85%)
+5) other organisms related to the one you are interested in also have homologs of that gene and they are MORE similar to your gene (in terms of % identity) than to the prokaryotic sequences in the database. Sometimes you have to make a phylogenetic tree to be sure…but often it is pretty obvious in the alignment
+6) if you have genomic data from the organism you are working on, then a true gene should also be in that data.  If the true gene in the genomic data has spliceosomal introns in it, then it is NOT a prokaryotic contaminant (spliceosomal introns do NOT occur in prokaryotes)
+
+So contaminants tend to be: i) low coverage, ii) highly similar to prokaryotic sequences in the database, iii) have different codon usage than the organism of interest, iv) lack polyA tails, v) not present in the genomic data…or if they are present then they lack introns and the genomic data should be at a different coverage than the eukaryote of interest.
+
+I hope this is helpful.  It is tempting to discard anything that has a best BLAST (or PLAST or DIAMOND) hit to a prokaryotic sequence as a contaminant — but if you do this, then you will discard many recent LGTs into your genome of interest.

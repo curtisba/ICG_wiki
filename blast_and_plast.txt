@@ -1,0 +1,39 @@
+Here is a shell to run **PLAST**:\\
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -o logo
+#$ -cwd
+#$ -pe threaded 10
+cd $PWD
+CPUs=10
+DB=/db1/nr-nt-fasta-oct-2020/nt
+QF=yourquery.fasta
+plast -e 1e-10 -max-hit-per-query 1 -outfmt 1 -a $CPUs -p plastn -max-database-size 10000000000 -i $QF -d $DB -o $QF.plout -force-query-order 1000
+</code>
+
+to parse the output see http://129.173.88.134:81/dokuwiki/doku.php?id=dayana_salas_-_utility_scripts_taxonomy_coloring_trees_phylogenetics_mixture_models_domain_architecture_and_more
+
+
+
+
+Here is a shell example to run **BLAST**:\\
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -pe threaded 1
+#$ -cwd
+source activate blast
+export BLASTDB=/db1/nr-nt-oct-2020-v5/
+DB=nt
+query=your_query.fasta
+blastn -db $DB -query $query -out yourqueryresults.blout -num_threads 1 -outfmt "6 qseqid sseqid evalue pident qcovs length slen qlen qstart qend sstart send stitle"
+source deactivate
+</code>
+
+Both shells using NCBI nt database (/db1/nr-nt-jan-2019/nt.nal), but the formats for specifying DB are different for BLAST and PLAST.
+

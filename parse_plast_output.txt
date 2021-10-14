@@ -1,0 +1,7 @@
+To parse plast output, copy the script below and run it under python36-generic\\
+
+/home/dsalas/Shared/Plast/plastparser.v1.py
+
+command line:
+Plast_parser.mp.v1.py <output.plout>
+

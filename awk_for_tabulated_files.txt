@@ -1,0 +1,120 @@
+The command awk can be really useful to edit or parse tabulated files (for example: blast outputs in columns separated by a tabulation = -outfmt 6; or gff files).
+
+By default, awk scans a file line by line, whereby a line is ending by a carriage return (\n) and further split the line into fields, by default separated by a tabulation "\t" although other field separators can be defined.
+
+
+
+We will see how to use awk on a blast output file (-outfmt 6) named blast.output which first lines look like that:
+<code>
+user$ head -7 blast.output
+BUSSELTON_g28320.t1	Seq_26_pilon_pilon	45.45	66	34	2	27	92	266496	266305	2e-07	57.4
+BUSSELTON_g29060.t1	Seq_133_pilon_pilon	24.01	279	171	9	398	668	26316	27053	6e-13	74.7
+BUSSELTON_g29060.t1	Seq_35_pilon_pilon	32.67	150	83	6	531	678	24051	23650	1e-07	57.4
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	46.67	195	79	1	1103	1272	499049	499633	9e-49	 193
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	68.89	90	27	1	594	683	498684	498950	8e-44	 137
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	77.14	35	8	0	684	718	498950	499054	8e-44	62.0
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	37.75	151	93	1	1381	1531	499664	500113	6e-23	 108
+# Fields: query id, subject id, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, send, evalue, bit score
+</code>
+
+
+How to invert 2 columns (fields) \\
+ex: Inverting the query (column 1) and the target (column 2)
+<code>
+user$ awk -F "\t" '{print $2"\t"$1"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}' blast.output
+Seq_26_pilon_pilon	BUSSELTON_g28320.t1	45.45	66	34	2	27	92	266496	266305	2e-07	57.4
+Seq_133_pilon_pilon	BUSSELTON_g29060.t1	24.01	279	171	9	398	668	26316	27053	6e-13	74.7
+Seq_35_pilon_pilon	BUSSELTON_g29060.t1	32.67	150	83	6	531	678	24051	23650	1e-07	57.4
+Seq_17_pilon_pilon	BUSSELTON_g29223.t1	46.67	195	79	1	1103	1272	499049	499633	9e-49	 193
+Seq_17_pilon_pilon	BUSSELTON_g29223.t1	68.89	90	27	1	594	683	498684	498950	8e-44	 137
+Seq_17_pilon_pilon	BUSSELTON_g29223.t1	77.14	35	8	0	684	718	498950	499054	8e-44	62.0
+Seq_17_pilon_pilon	BUSSELTON_g29223.t1	37.75	151	93	1	1381	1531	499664	500113	6e-23	 108
+#-F "\t" is used to say that the fields in the blast.output file are separated by a tabulation
+</code>
+
+
+How to use the **if** statement \\
+ex 1: printing a line if the name of the query (first column) contains "g29"
+<code>
+user$ awk -F "\t" '{if ($1 ~ /g29/) print}' blast.output
+BUSSELTON_g29060.t1	Seq_133_pilon_pilon	24.01	279	171	9	398	668	26316	27053	6e-13	74.7
+BUSSELTON_g29060.t1	Seq_35_pilon_pilon	32.67	150	83	6	531	678	24051	23650	1e-07	57.4
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	46.67	195	79	1	1103	1272	499049	499633	9e-49	 193
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	68.89	90	27	1	594	683	498684	498950	8e-44	 137
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	77.14	35	8	0	684	718	498950	499054	8e-44	62.0
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	37.75	151	93	1	1381	1531	499664	500113	6e-23	 108
+#the query in the first line BUSSELTON_g28320.t1 is the only one that do not contains "g29" so was not printed
+</code>
+
+
+ex 2: printing a line if the start of the hit in the target sequence (column 9 (s. start)) is greater than 499000
+<code>
+$user awk -F "\t" '{if ($9 > 499000) print}' blast.output
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	46.67	195	79	1	1103	1272	499049	499633	9e-49	 193
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	37.75	151	93	1	1381	1531	499664	500113	6e-23	 108
+</code>
+
+How to use the **if** statement with 2 conditions \\
+ex: printing a line if the name of the query contains "g29" AND if the the hit in the target sequence (column 9) is smaller than 499000
+<code>
+$user awk -F "\t" '{if (($9 < 499000) && ($1 ~ /g29/)) print}' blast.output
+BUSSELTON_g29060.t1	Seq_133_pilon_pilon	24.01	279	171	9	398	668	26316	27053	6e-13	74.7
+BUSSELTON_g29060.t1	Seq_35_pilon_pilon	32.67	150	83	6	531	678	24051	23650	1e-07	57.4
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	68.89	90	27	1	594	683	498684	498950	8e-44	 137
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	77.14	35	8	0	684	718	498950	499054	8e-44	62.0
+#&& mean AND, both conditions must be filled
+</code>
+
+
+ex: printing a line if the name of the query contains "g29" OR if the the hit in the target sequence (column 9) is smaller than 499000
+<code>
+user$ awk -F "\t" '{if (($9 < 499000) || ($1 ~ /g29/)) print}' blast.output
+BUSSELTON_g28320.t1	Seq_26_pilon_pilon	45.45	66	34	2	27	92	266496	266305	2e-07	57.4
+BUSSELTON_g29060.t1	Seq_133_pilon_pilon	24.01	279	171	9	398	668	26316	27053	6e-13	74.7
+BUSSELTON_g29060.t1	Seq_35_pilon_pilon	32.67	150	83	6	531	678	24051	23650	1e-07	57.4
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	46.67	195	79	1	1103	1272	499049	499633	9e-49	 193
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	68.89	90	27	1	594	683	498684	498950	8e-44	 137
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	77.14	35	8	0	684	718	498950	499054	8e-44	62.0
+BUSSELTON_g29223.t1	Seq_17_pilon_pilon	37.75	151	93	1	1381	1531	499664	500113	6e-23	 108
+#the 2 pipes caracters || mean OR, either conditions must be filled
+</code>
+
+
+How to use the if and else statments \\
+ex: printing the first column of a line if the query (first column) contains "g29", else print the full line
+<code>
+user$ awk -F "\t" '{if ($1 ~ /g29/) print $1; else print}' blast.output
+BUSSELTON_g28320.t1	Seq_26_pilon_pilon	45.45	66	34	2	27	92	266496	266305	2e-07	57.4
+BUSSELTON_g29060.t1
+BUSSELTON_g29060.t1
+BUSSELTON_g29223.t1
+BUSSELTON_g29223.t1
+BUSSELTON_g29223.t1
+BUSSELTON_g29223.t1
+</code>
+
+How to make numeric operations on certain fields \\
+ex 1: printing the column 2, the column 10 and the column 10 -100
+<code>
+user$ awk -F "\t" '{print $2"\t"$10"\t"$10-100}' blast.output
+Seq_26_pilon_pilon	266305	266205
+Seq_133_pilon_pilon	27053	26953
+Seq_35_pilon_pilon	23650	23550
+Seq_17_pilon_pilon	499633	499533
+Seq_17_pilon_pilon	498950	498850
+Seq_17_pilon_pilon	499054	498954
+Seq_17_pilon_pilon	500113	500013
+</code>
+
+ex 2: if the column 10 is greater than the column 9, print the column 2, the column 9 -100 and the column 9; else (if the column 9 is greater than the column 10) printing the column 2, the column 10 and the column 10 +100
+<code>
+user$ awk -F "\t" '{if ($9 > $10) print $2"\t"$9-100"\t"$9; else print $2"\t"$10"\t"$10+100}' blast.output
+Seq_26_pilon_pilon	266396	266496
+Seq_133_pilon_pilon	27053	27153
+Seq_35_pilon_pilon	23951	24051
+Seq_17_pilon_pilon	499633	499733
+Seq_17_pilon_pilon	498950	499050
+Seq_17_pilon_pilon	499054	499154
+Seq_17_pilon_pilon	500113	500213
+</code>
+

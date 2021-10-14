@@ -1,0 +1,106 @@
+====== ASSEMBLING LONG READ DATA ======
+
+Documentation by Sarah Shah
+
+When you have your porechopped reads in fastq and fasta formats, try out the following assemblers:
+
+Programs: ABruijn ([[https://github.com/fenderglass/ABruijn]]), Flye ([[https://github.com/fenderglass/Flye]]), Canu ([[http://canu.readthedocs.io/en/latest/quick-start.html]]), smartdenovo ([[https://github.com/ruanjue/smartdenovo]]), miniasm ([[https://github.com/lh3/miniasm]])
+
+**ABruijn**
+
+ABruijn is relatively simple to use. As its name suggests, it uses A-Bruijn graph to find the overlaps between reads. It has a polishing step to improve quality.
+
+It needs a fasta input. The final product is a polished_(1+number of iterations specified).fasta.
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+
+unset PYTHONPATH
+export PATH=/scratch2/software/Python-2.7.13/bin:$PATH
+export LD_LIBRARY_PATH=/scratch2/software/Python-2.7.13/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/scratch2/software/hdf5-1.8.18/lib:$LD_LIBRARY_PATH
+export PATH=/scratch2/software/blasr/bin:$PATH
+
+cd /path/to your working directory
+
+/scratch2/software/ABruijn-1.0/bin/abruijn /path/to_your_fasta /path/to_an_output_directory <estimated coverage> --platform nano --threads 10
+</code>
+
+Abruijn has been replaced by **Flye** as of January 2018! Example usage:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 16
+#$ -o leg
+
+source /scratch2/software/python-2.7-env/bin/activate
+
+unset PYTHONPATH
+
+flye --nano-raw Acas_merged_pc_fl.fastq --genome-size 45m --out-dir Acas_filtlongFlye --threads 16 --iterations 3 --min-overlap 3000
+</code>
+**Canu**
+
+This assembler has the most complicated settings! It produces the most comprehensive set of outputs though, as it goes through correction, trimming, and assembling steps. Important outputs are:
+  * .contigs.gfa file. You can view the graph with **Bandage**.
+  * .contigs.fasta
+
+The following script contains settings for a eukaryote-bacteria dataset where contaminating bacterial genomes can be separated easily.
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+
+export PATH=/opt/perun/jre1.8.0_121/bin:$PATH
+
+/opt/perun/canu/canu-1.6/Linux-amd64/bin/canu \
+-p outputfileprefix -d nameofdirectorytostorealloutputs \
+maxMemory=200g \
+maxThreads=20 \
+'corMinCoverage=0' 'corOutCoverage=all' 'corMhapSensitivity=high' 'corMaxEvidenceErate=0.15' 'correctedErrorRate=0.105' 'genomeSize=5m' 'corMaxEvidenceCoverageLocal=10' 'corM
+axEvidenceCoverageGlobal=10' 'oeaMemory=32' 'redMemory=32' 'batMemory=200' \
+-nanopore-raw /path/to_your_fastq_file \
+useGrid=false
+
+# The first set of parameters increases the sensitivity and keeps as much data as possible. The next set limits how many other reads any given read can correct to try to avoi
+d mixing strains and finally, some default memory is increased but this is not strictly necessary.
+# From post https://github.com/marbl/canu/issues/634
+</code>
+**smartdenovo**
+
+Download smartdenovo to your account on Perun.
+<code>
+/path/to/smartdenovo/smartdenovo.pl reads.fa > reads.mak
+make -f reads.mak
+</code>
+The **.utg** file is the important output.
+
+**miniasm**
+
+The simplest and the fastest of all the assemblers here. First, self-map the fasta file using minimap2:
+<code>
+minimap2 -x ava-ont reads.fq reads.fq | gzip -1 > reads.paf.gz
+</code>
+
+Then, use miniasm:
+<code>
+miniasm -f reads.fq reads.paf.gz > reads.gfa
+</code>
+
+View the .gfa file using **Bandage**. You can convert the .gfa file to a fasta file by:
+<code>
+awk '/^S/{print">"$2"\n"$3}' in.gfa | fold > out.fa
+</code>
+
+----
+
+The Unicycler Github page ([[https://github.com/rrwick/Unicycler]]) has nice examples of how good, alright, and terrible graphs look like. 
+
+Do a quick BLAST search of your contigs and separate out the eukaryotic and bacterial contigs. Compare your assemblies using QUAST ([[http://quast.bioinf.spbau.ru/]]) and continue to **[[nanopore_tools_for_polishing|polishing and correcting]]** your chosen assembly. 

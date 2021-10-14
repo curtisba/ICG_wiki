@@ -1,0 +1,6 @@
+nohup
+  	-allows the program/script to continue running even if you terminal session ends
+  	-useful if start running something on your laptop and need to shut your computer down
+  	or your service provider ends remote logins after awhile
+  	
+  nohup script > my_output

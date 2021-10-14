@@ -1,0 +1,248 @@
+====== Polishing your MinION assembly ======
+Documentation by Jon Jerlström Hultqvist and Shelby Williams
+
+**Be aware that some scripts and commands might not be working any longer on Perun due to the switch to the new conda-environment system. Sections will be progressively updated to reflect this.**
+
+The following are tools for polishing Oxford Nanopore assemblies, to help eliminate some of the error associated with the long-read data. Each polisher uses a mapping step prior to correcting the assemblies. BWA MEM is used here as the mapping tool, but can be replaced with another mapper.
+
+
+----
+
+
+**Racon** [[https://github.com/isovic/racon]]
+
+Racon is a super quick option for polishing assemblies. It is made to work with assemblies made with miniasm (another quick option) but can easily be implemented for assemblies created by Abruijn, Canu, ect. Racon works best when it is used in iteration; an assembly should be polished more than once for best results. In this way, Racon can improve upon polishing that was attempted by assemblers, such as Abruijn.
+
+Racon uses three input files: the assembly file you wish to polish (in fasta format), the original raw reads of that assembly (in fastq format), and an overlap file (in PAF or MHAP). This overlap file can be easily created using Minimap, and this step of the polishing process is already integrated into the shell script:
+
+Shell script:
+{{ :bman_racon_1sh.doc |}}
+
+The following is a script using default settings:
+<code>
+minimap -t8 assembly.fasta /scratch2/user/path/to/raw_reads.fastq | racon /scratch2/user/path/to/raw_reads.fastq - assembly.fasta output_assembly.polish1.fasta
+</code>
+**Note 1**: for each polish performed, the script must be changed to reflect the new file names.
+
+For genomes with lots of stubborn indels that persist after Nanopolishing and Unicycling, play around with the flags -e (error threshold), -w (window size), and -q (coverage threshold). I found that increasing window size and decreasing coverage threshold works well. The following is a script that contains one round of minimap2 mapping (read **Note 2** on interleaved short reads), Racon polishing, then Bowtie2 mapping (for viewing bam files):
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 8
+
+cd /your_working_directory/
+input=your_input_genome.fasta
+output=your_output_racon_round1.fasta
+minimap2 -t 8 $input interleavedshortreads.fq > temporary.paf
+echo "minimap2 done"
+racon -u -e 0.1 -w 500 -q 1 -t 8 interleavedshortreads.fq temporary.paf $input >$output
+echo "racon done"
+rm temporary.paf
+source activate bowtie2
+bowtie2-build $output $output
+bowtie2 -k 2 --threads 8 -x $output --very-sensitive \
+-1 your_forward_short_reads.fq \
+-2 your_reverse_short_reads.fq \
+-S $output.sam
+echo "Bowtie done"
+conda deactivate
+samtools view -F 4 -bS $output.sam |samtools sort > $output.sorted.bam
+samtools index $output.sorted.bam > $output.sorted.bam.bai
+rm $output.sam
+rm $output.*.bt2
+</code>
+You can modify the above script to loop for multiple rounds, but if you're looking for the best settings for correcting errors always check the bam files by eye after each round. 
+
+**Note 2**: The "**interleavedshortreads.fq**" must not contain blanks/white spaces in headers. You can simply concatenate forward and reverse reads into one read file, but making them interleaved is useful for other read correction tools. To obtain interleaved reads:
+<code>
+source activate fastx_toolkit
+fastq-interleave read1.fq read2.fq > interleaved.fq
+</code>
+
+**WARNING**: Keep an eye on genome/contig size difference after each round of polishing. Using window size (-w) above 5000 may remove repetitive regions or regions with no short-read coverage. 
+----
+
+
+**Pilon** [[https://github.com/broadinstitute/pilon/wiki]]
+
+Pilon uses mapped illumina reads to improve the assembly quality in several ways. It will try to correct small variants, local missamblies, collapsed repeats etc. depending on the settings. This Pilon pipeline uses BWA MEM to map the Illumina reads to the assembly, and utilizes the read file to find and correct mismatches between the two sets of data.
+
+This polisher should also be used to be used iteratively to progressively improve the quality. The reason being, a corrected assembly will attract more mapped reads which will allow progressively better assemblies. This fact is used by the **Unicycler** polish module.
+
+This polish is a great choice to progressively increase the quality of your assemblies as a last step, but since it was developed for bacterial genomes specifically and is uses very sensitive parameters, it is not recommended for the first polish of an assembly. However, it should be fine to use for polishing of the small variants of the genome. 
+
+Shell scripts:
+{{ :meteora_bwash.doc |}}
+{{ :pilonsh.doc |}}
+
+Usage:
+
+First, make a BWA index of the assembly you wish to map onto by using the following command:
+<code>
+bwa index assembly_to_polish.fasta
+</code>
+Next, use the meteora_bwa.sh script to map the short reads onto your assembly. This will create a sorted.bam file. In this example, two paired-end read files will be mapped:
+<code>
+bwa mem -t 16 assembly_to_polish.fasta /scratch2/user/path/to/trimmedreads_1_PairNtrim.fastq.gz /scratch2/user/path/to/trimmedreads_2_PairNtrim.fastq.gz | samtools view -Sb - | samtools sort >  piloninput.sorted.bam
+</code>
+Once this is finished, use Pilon.sh to make changes in the assembly and generate a new consensus sequence. Pilon.sh can be formatted like so:
+<code>
+java -Xmx16G -jar /scratch2/software/pilon/pilon-1.22.jar --genome assembly_to_polish.fasta --frags piloninput.sorted.bam --output P2x --outdir Pilon2x --threads 16
+</code>
+You may run into an error where Pilon does not recognize the bam file created from the previous step as being indexed. To fix this, run:
+<code>
+samtools index /path/to_bam_file
+</code>
+This will return a .bam.bai file. This file needs to be in the same folder as Pilon.sh, but does not need to be placed in the script.
+
+**Alternatively:** you can use **Unicycler** to do iterative steps of Pilon. This saves you the trouble of having to edit the shell script with the names of new reads. Unicycler can be used to do a huge variety of tasks. Here, we only use it to utilize Pilon. Unicycler will use several different Pilon settings to polish the assembly, and requires paired end trimmed Illumina reads, the trimmed long reads, and the assembly to be fixed. [[https://github.com/rrwick/Unicycler]]
+
+Shell script:
+{{ :unicyclersh.docx |}}
+
+Formatting:
+<code>
+/scratch2/software/Python-3.6.0/bin/unicycler_polish -1 /scratch2/user/path_to/Illumina_shortreads_1_PairNtrim.fq -2 /scratch2/user/path_to/Illumina_shortreads_2_PairNtrim.fq --long_reads longreads_trimmed.fastq.gz -a assembly_to_clean.fasta --pilon=/scratch2/software/pilon/pilon-1.22.jar --samtools=/opt/perun/bin/samtools --threads 16
+</code>
+
+*Unicycler does not like colons ":" in headers. Replace them with a sed command such as:
+<code>
+sed -i 's/:/_/g' filename
+</code>
+
+There is also a handy perl script "translate\_fasta\_headers" that can be used to generate clean headers that are accepted by most programs (https://github.com/nylander/translate_fasta_headers). This porgram keeps the old headers in a tabulated file so that they can be restored at the users request.
+
+## USAGE
+
+    ./translate_fasta_headers.pl [--tabfile=<tabfile.tab>] [--in=<in.fas>] [--out=<out.fas>] <in.fas>
+
+#### From long to short labels:
+
+    ./translate_fasta_headers.pl --out=out.fas in.fas
+
+#### An back, using a translation table:
+
+    ./translate_fasta_headers.pl --tabfile=out.fas.translation.tab out.fas
+
+
+----
+
+**Nanopolish** [[https://github.com/jts/nanopolish]]
+
+Nanopolish uses the raw event data that is extracted from FAST5 files. The reads are aligned using bwa mem and the consensus algorithm polishes the assembly in pieces. Finally the pieces are merged to create a final assembly. The final assembly appears to be more accurate but it is very computer intensive. The resulting polished assemblies appear to reach about 99.5% or higher but are definitely not perfect. People have suggested that running Racon 2 rounds before doing nanopolish will speed up this. Since Racon is comparatively quick it is strongly recommend that you try this.
+
+Please be aware! Headers of fasta file should not contain any commas (:) or pipes (|), or it will fail in the nanopolish_consensus step!!.  So any assembly out of Abruijn will need to have commas removed.
+
+
+If illumina reads are available it might be possible to skip nanopolish altogether and go directly to Pilon polishing after Racon. This has been exemplified in the Solanum penellii pre-print where nanopolish simply was not feasible.
+
+Location: /scratch2/software/anaconda/envs/nanopolish-0.12/bin
+
+Scripts:
+
+{{ :nanopolish_align_busseltonsh.doc |}}
+{{ :nanopolish_consensus_busselton_jun6sh.doc |}}
+{{ :nanopolish_extractsh.doc |}}
+{{ :nanopolish_merge_jun5sh.doc |}}
+
+A quick overview of the order to use each script, and what they do:
+
+nanopolish_extract - extracts data from a directory of FAST5 files. Do not do this if you used albacore 2.0 or higher to basecall.
+
+nanopolish_align - uses bwa mem -x ont2d mappings.
+
+nanopolish_consensus - computes the new consensus in batches of 50 kb. 
+
+nanopolish merge - merges the pieces into new a new consensus.
+
+**Updated Nanopolish protocol (as of March 8 2020):** 
+
+First, index your unchopped, raw reads file. 
+Use the sequencing_summary.txt produced by albacore during basecalling to speed up this step significantly. If you have several sequencing_summary.txt files these can be placed in a fof-file with the  path to the txt-file and called by -f. This also works in case of a single-file.:
+for the following step **DO NOT** **use more than 1** thread because the program is not threaded!
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 1
+cd $PWD
+
+fast5path=/scratch2/path2/fast5/
+fastq=/path2fastqlongreads.fastq
+seqsummary=/path2tosequencing_summary.txt
+source activate nanopolish-0.13.2
+export PATH=/scratch2/software/anaconda/envs/nanopolish-0.13.2/bin:$PATH
+nanopolish index -d $fast5path -s $seqsummary $fastq
+conda deactivate
+
+
+</code>
+
+This will create four files with the following extensions: .index, .index.gzi, .index.fai, .index.readdb .
+
+Next, map long-reads to the reference to be polished. It is highly recommended to use minimap2 for this purpose. It is quick, accurate and computationally inexpensive. In this example, the minimap2-output is piped to samtools directly to create a sorted bam-file. Finally this bam-file needs to be indexed to be useful to nanopolish consensus.
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+cd $PWD
+
+export PATH=/scratch2/software/anaconda/bin:$PATH
+source activate python27-generic
+
+minimap2 -ax map-ont -t 20 \
+reference.fasta /path/to/reads.fastq \
+| samtools sort -o reads.sorted.bam -T reads.tmp -
+
+samtools index reads.sorted.bam
+
+conda deactivate
+
+</code>
+
+<del>(Next, index your draft genome (which has already been polished with Racon once or twice). You do not need to do this if you're using **minimap2** to create the alignment .bam file. I recommend splitting your draft genome into 5Mb pieces before doing this. **pyfasta split** is a handy tool for splitting. Either through the command line or a shell script, do:
+
+<code>bwa index piece_of_draft_genome.fa </code>
+Then alignment file .bam must be made:
+<code>bwa mem -x ont2d -t 8 draft.fa reads.fastq | samtools sort -o reads.sorted.bam -T reads.tmp
+samtools index reads.sorted.bam </code> "reads" must correspond to the name of the raw fastq and its nanoplish index file names. The "draft.fa" must also correspond to the split piece of the draft genome you bwa indexed.)</del>
+
+Finally, build the actual consensus sequence. nanopolish consensus will segment the genome into chunks of 50 kb and in this case run 20 jobs in parallell. BE AWARE: Nanopolish is resource hungry and it can easily swallow the resources of a node. If you end up with crashes, I would suggest throttling back the threads used by nanopolish or use a larger computing node. Each genome and dataset behaves slightly differently so it is recommended to keep a strict eye on the resources being used to nanopolish.:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+cd $PWD
+
+export PATH=/scratch2/software/anaconda/envs/nanopolish-0.12/bin:$PATH
+
+source activate nanopolish-0.12
+
+nanopolish_makerange.py reference.fasta | parallel --results nanopolish.results -P 20 \
+nanopolish variants --consensus -o polished.{1}.fa -w {1} \
+-r /path/to/reads.fastq -b reads.sorted.bam -g reference.fasta -t 10 --min-candidate-frequency 0.1
+
+conda deactivate
+
+</code>
+This will create new pieces of consensus sequences in the current working directory (not in the nanopolish.results folder indicated in the script above)  named polished.*.fa. Merge them by:
+<code>
+python /scratch2/software/anaconda/envs/nanopolish-python3/bin/nanopolish_merge.py polished.*.fa > polished_reference.fa </code>
+
+Sometimes, nanopolish will fail on a particular segment of fasta-file. Nanopolish merge will then indicate what segment(s) it failed to find. 
+<code>
+error: segment starting at Seq_1:150000 is missing
+error: segment starting at Seq_1:900000 is missing
+error: some segments are missing, could not merge contig Seq_1
+</code>
+It is possible to separate out the offending fasta file and re-run this fasta file entry (Seq_1) through the minimap2-mapping and consensus steps to obtain the missing piece(s). These pieces can then be placed in the original nanopolish directory. But make sure that the file carries the same name as in the original multi-fasta file to make merging possible.
+
+Now, move on to Pilon or Unicycle!

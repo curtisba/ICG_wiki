@@ -1,0 +1,10 @@
+example script for running RevBayes with multiple cores on perun (courtesy of Gordan Lax)
+
+#!/bin/bash\\
+#$ -S /bin/bash\\
+. /etc/profile\\
+#$ -o bash-revbayes-mpi\\
+#$ -cwd\\
+#$ -pe openmpi 4\\
+source activate revbayes\\
+mpirun -np 4 rb-mpi run.REV\\

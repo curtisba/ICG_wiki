@@ -1,0 +1,84 @@
+sort some_file
+	-can be sorted numerically or alphanumerically (default)
+	
+
+	
+sort INTRON_SIZE
+
+sort -n
+	-numerical sort, lowest to highest
+sort -nr
+	-numerical sort, highest to lowest
+
+what is the smallest size?\\	
+sort INTRON_SIZE -n |head -1
+
+what is the largest size?\\ 
+sort INTRON_SIZE -n |tail -1\\
+sort INTRON_SIZE -nr |head -1
+
+sort -n INTRON_SIZE > file_of_sorted_intron_sizes
+
+sort -k  
+	-sorts on fields
+		-by default spaces/tables separate fields
+			apple 15 rotten has 3 fields
+				field 1 is apple
+				field 2 is 15
+				field 3 is rotten
+
+more fruit\\			
+apple 10 quality:fresh\\
+cherry 15 quality:rotten\\
+peach 89 quality:fresh\\
+blueberry 15 quality:rotten\\
+peach 32 quality:unknown\\
+peach 5 quality:rotten\\
+grape 23 quality:fresh\\
+grapfruit 100 quality:unknown\\
+melon 15 quality:fresh\\
+
+to sort by fruit name alphabetically\\
+
+sort -k1,1 fruit
+ 	
+ 	
+to sort by price\\
+sort -k2n,2n fruit\\
+	-sort by second field (k2) and just second field(,2) and numerically (n)
+	
+peach 5 quality:rotten\\
+apple 10 quality:fresh\\
+blueberry 15 quality:rotten\\
+cherry 15 quality:rotten\\
+melon 15 quality:fresh\\
+grape 23 quality:fresh\\
+peach 32 quality:unknown\\
+peach 89 quality:fresh\\
+grapfruit 100 quality:unknown\\
+
+to sort by quality\\
+sort -k3,3 fruit
+
+apple 10 quality:fresh\\
+grape 23 quality:fresh\\
+melon 15 quality:fresh\\
+peach 89 quality:fresh\\
+blueberry 15 quality:rotten\\
+cherry 15 quality:rotten\\
+peach 5 quality:rotten\\
+grapfruit 100 quality:unknown\\
+peach 32 quality:unknown\\
+
+to sort by quality and then price\\
+sort -k3,3 -k2n,2n fruit
+
+apple 10 quality:fresh\\
+melon 15 quality:fresh\\
+grape 23 quality:fresh\\
+peach 89 quality:fresh\\
+peach 5 quality:rotten\\
+blueberry 15 quality:rotten\\
+cherry 15 quality:rotten\\
+peach 32 quality:unknown\\
+grapfruit 100 quality:unknown\\

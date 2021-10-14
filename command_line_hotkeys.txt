@@ -1,0 +1,29 @@
+=== The Hot Keys ===
+
+<code>
+Ctrl-a		Jump to START of line
+Ctrl-e		Jump to END of line
+M-f		Jump FORWARD one word or until special character. For example ‘ /\_.,-‘ 
+M-b		Jump BACK one word or until special character
+Ctrl-k		Remove (KILL) everything after the cursor
+Ctrl-u		Remove everything before the cursor
+Ctrl-w		Remove the (previous) word
+Ctrl-y		Paste (YANK) the last thing you removed with Ctrl-k, Ctrl-u or Ctrl-w
+Ctrl-l		Clear the screen (same as clear) Ctrl-d Exit terminal session (same as exit)
+M-Bcksp		Remove everything before the cursor until a special character
+Ctrl-r		Search for commands in the commands history (also see history)
+</code>
+
+M stands for the Meta Key (see below)
+
+Theys hotkeys can save you a lot of time when editing a previous command to create a new command, especially if these are very long commands. I find in particular Ctrl-r extremely useful.
+
+=== The Meta Key ===
+
+The Meta key is a special key that is commonly used in command line work. It used to be an actual physical key on keyboards from the 1970s, when computer standard protocols were being developed. Nowadays its more like a virtual key which is activated by different physical keys depending on the system you are using
+
+Meta = Alt on standard keyboards
+
+Meta = Esc on Mac keyboards 
+
+If you use iTerm2 on a Mac, you can make the Option key act as the Meta key

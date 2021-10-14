@@ -1,0 +1,74 @@
+===== Evaluating and comparing transcriptome assemblies with rnaQUAST =====
+
+Documentation by Joran Martijn (11 January 2021)
+
+Once you have assembled your RNA-seq reads into transcriptomes, you'll want to have some sense of assembly quality, or just a summary of your transcriptome in general (number of transcripts, number of predicted genes, estimated completeness, longest transcript etc.)
+
+A common tool to evaluate genome assemblies is [[https://github.com/ablab/quast|QUAST]]. Thankfully the fine folks who created QUAST also created a special tool to evaluate transcriptome assemblies: [[https://github.com/ablab/rnaquast|rnaQUAST]]. This is the tool that we will be using.
+
+Here is an example perun submission script:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -m bea
+#$ -pe threaded 8
+#$ -q 144G-batch,256G-batch,768G-batch
+
+source activate rnaquast-2.2.0
+
+rnaQUAST.py \
+    -o 6_rnaquast-2.2.0 \
+    -c 4_trinity-2.11-with-work-around/Trinity.fasta 5_rnaspades-3.14.1/transcripts.fasta \
+    -t 8 \
+    -l trinity rnaspades \
+    -ss \
+    --gene_mark \
+    --busco /home/jmartijn/db/busco/eukaryota_odb10
+</code>
+
+The script activates the rnaquast-2.2.0 conda environment. 2.2.0 is the latest version as of January 2021. This environment contains all the necessary software to run the job smoothly. 
+
+Quick explanation on the options:
+<code>
+-o                  output_directory
+-c                  transcriptome1.fasta transcriptome2.fasta ... transcriptomeN.fasta
+-t                  number_of_threads
+-l                  transcriptome_label1 transcriptome_label2 ... transcriptome_labelN
+-ss                 invoke if you used a strand specific mRNA library
+--gene_mark         to activate gene prediction with GeneMark
+--busco <busco_db>  to activate completeness evaluation with BUSCO
+</code>
+
+The labels are used to rename your transcriptomes in the context of the rnaQUAST analysis. ''transcriptome1.fasta'' will be renamed to ''transcriptome_label1'', etc etc.
+
+Note that the submission script is specifically asking to run on ''144G-batch'', ''256G-batch'' or ''768G-batch'' nodes. For some unclear reason only these nodes will run the software smoothly without fail. It may work on some specific ''16G-batch'' nodes as well but its a gamble.
+
+In this case I ran rnaQUAST without reference genomes, but it is possible to do so. That should give you a lot more interesting metrics to look at.
+
+=== Output ===
+
+Here is the output that I got as an example. As you can see I got about twice as many transcripts with rnaspades compared to trinity, but trinity yielded in general longer transcripts and more predicted genes. Completeness estimates are about the same.
+
+''short_report.txt''
+
+<code>
+SHORT SUMMARY REPORT
+
+METRICS/TRANSCRIPTS                                    trinity                  rnaspades
+
+ == BASIC TRANSCRIPTS METRICS ==
+Transcripts                                            16142                    33100
+Transcripts > 500 bp                                   7208                     4977
+Transcripts > 1000 bp                                  4584                     3447
+
+ == BUSCO METRICS ==
+Complete                                               39.216                   37.647
+Partial                                                8.235                    8.627
+
+ == GeneMarkS-T METRICS ==
+Predicted genes                                        6936                     5098
+</code>
+
+rnaQUAST will also output a PDF with a nice Cumulative transcript / isoform length plot.

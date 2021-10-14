@@ -1,0 +1,26 @@
+Extracting protein or nucleotide sequences from an assembly using a GFF file
+
+You will need a gff3 file and the genome assembly it is based on.
+
+To get the protein sequences of the genes identified in the gff3 file
+
+/opt/perun/PASA_r20140417/misc_utilities/gff3_file_to_proteins.pl name_of_gff_file  name_of_assembly prot > name_of_outputfile
+
+To get the nucleotide equivalent (coding sequence) of the protein sequence
+
+/opt/perun/PASA_r20140417/misc_utilities/gff3_file_to_proteins.pl name_of_gff_file  name_of_assembly CDS > name_of_outputfile
+
+To get the nucleotide equivalent (coding sequence) plus a certain amount of flanking sequence on both ends
+
+/opt/perun/PASA_r20140417/misc_utilities/gff3_file_to_proteins.pl name_of_gff_file  name_of_assembly CDS number_of_flanking_bases > name_of_outputfile
+
+To get the nucleotide gene sequence
+
+/opt/perun/PASA_r20140417/misc_utilities/gff3_file_to_proteins.pl name_of_gff_file  name_of_assembly gene  > name_of_outputfile
+
+Note that the number of gene sequences returned may not be equivalent to the number of protein or CDS sequences returned due to alternative
+CDS/protein models
+
+To get the nucleotide gene sequence plus a certain amount of flanking sequence
+
+/opt/perun/PASA_r20140417/misc_utilities/gff3_file_to_proteins.pl name_of_gff_file  name_of_assembly gene number_of_flanking_bases > name_of_outputfile

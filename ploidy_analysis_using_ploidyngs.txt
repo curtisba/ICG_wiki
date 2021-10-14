@@ -1,0 +1,56 @@
+https://github.com/diriano/ploidyNGS
+
+Note that you will need a sorted bam file to run ploidyNGS
+
+Script for running a ploidyNGS analysis on perun
+
+#!/bin/bash\\
+#$ -S /bin/bash\\
+. /etc/profile\\
+#$ -cwd
+
+
+source activate ploidyNGS-preq
+
+/scratch2/software/ploidyNGS/ploidyNGS.py -o outputfilename -b nameofsortedbamfile.bam 
+
+conda deactivate
+
+Perun will immediately generate error messages that look dire if not fatal
+"fatal: not a git repository (or any parent up to mount point /misc)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set)."
+but you can ignore these and the program continues to run
+
+
+
+One of the options you will be interested in is 
+-d 100 (default), --max_depth 100 (default)
+    Max number of reads kepth at each position in the
+    reference genome (integer, default: 100)
+    If you have low coverage you will need to change this otherwise you won't have
+    many sites that qualify for examination.
+
+
+Examine the tab output file. In particular, if the lines for Third and Fourth contain
+almost all 0.00 then they should be removed from the tab file, otherwise they mess up
+the histogram.
+
+To see the sorted content of the Third and Fourth lines
+
+grep Fourth myoutput.tab |cut -f4 |sort -n\\
+grep Third myoutput.tab |cut -f4 |sort -n
+
+
+To remove Third and Fourth lines from the tab
+
+grep -v Fourth  myoutput.tab |grep -v Third > mytabforhistogram.tab
+
+
+Once satisfied with the tab you need to make a pdf (it is suppose to generate it automatically
+but it doesn't)
+
+On the commandline
+
+   Rscript --vanilla /scratch2/software/ploidyNGS/ploidyNGS_generateHistogram.R mytabforhistogram.tab
+
+This will generate a pdf called NA which you can transfer to your home computer to look at.

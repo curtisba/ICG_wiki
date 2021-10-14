@@ -1,0 +1,49 @@
+**Quick taxonomy recovery** using the Accession numbers from either a Blast or Plast output:\\
+
+use acc2tax program available in the environmental path.\\
+
+here is an example of how to run it for protein IDs (-p):\\
+
+
+   acc2tax -i /db1/extra-data-sets/Acc2tax/acc2taxIN_example -p -d /db1/extra-data-sets/Acc2tax/Acc2Tax_071119 -o taxonomy.out
+
+don't forget to make sure that your input file contains only the accession numbers without their version, see the example file given above. 
+
+:-( E.g., MBI4782295.1 shall be MBI4782295, otherwise the bugs will occur:
+
+<code>
+Couldn't find: [MBI4782295.1]
+
+</code>
+
+:-D Trim the version ".1" behind the accession MBI4782295.1
+
+<code>
+> sed 's/\(.*\)\..*/\1/g' file >out_file
+
+</code>
+
+Note: It can still acquire a list of unknown like below even the NCBI taxonomy database is updated to the latest.
+
+<code>
+Couldn't find: [MBR3349819]
+Couldn't find: [HBS54143]
+Couldn't find: [MYJ28876]
+</code>
+
+This might due to these protein IDs(MBR3349819,HBS54143) from the species cannot put into the taxonomy like NP_051083. i.e., Lineage is not in (full) status.
+
+
+<code>
+NP_051083	cellular organisms,Eukaryota,Viridiplantae,Streptophyta,Streptophytina,Embryophyta,Tracheophyta,Euphyllophyta,Spermatophyta,Magnoliopsida,Mesangiospermae,eudicotyledons,Gunneridae,Pentapetalae,rosids,malvids,Brassicales,Brassicaceae,Camelineae,Arabidopsis,Arabidopsis thaliana
+</code>
+
+==========================
+acc2tax database:\\
+
+/scratch3/rogerlab_databases/other_dbs/Acc2Tax_Feb122021		(Up to date Feb 23, 2021)
+
+/misc/db1/extra-data-sets/Acc2tax/Acc2tax_092021		(Up to date Sep 20, 2021)
+\\
+
+<Last updated by Xi Zhang on Sep 21st,2021>

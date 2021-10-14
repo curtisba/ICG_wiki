@@ -1,0 +1,64 @@
+ls
+	-list the content of a directory
+	-lots of options
+
+
+ls
+	-most basic
+	
+ls *somestring
+	ls *pl  will list just the files ending in pl
+ls somestrint*
+	ls hat* will list just the files starting with hat
+ls *somestring*somestring
+	ls *Uni*gb will list the files containing the string Uni and ending in the string gb
+	
+
+
+ls –l
+	-probably the most important
+		-some people set up an alias so ls is really ls –l
+		-gives you lots of information
+			-whether it is a directory or file
+			-permissions for you, your group, everyone else
+			-who created the file/directory
+			-what group it belongs to
+			-the size of the file in bytes
+			-when it was created/changed
+			-the name of the file/directory
+ls –a
+	-show all files including those starting with .
+	-usually doesn’t show much but try in your home directory and see all the hidden files
+		-configuration files for various applications
+		-configuration files for your session 
+			-.bashrc
+			-.profile.orig
+ls –lS
+
+ls –G vs ls –-color
+	-ls -lG on mac
+	ls -l --color on perun
+		-highlighted green=directory
+		-green letters=files that are executable
+		-basic black=non executable file
+		
+
+ls –S
+ls -lS
+	-sorts the files by size
+	
+ls –lh
+	-lists file size in human readable format 
+		956M vs 1001818676
+	-an approximate of the genome size
+	
+	ls -lh *fasta
+		9.7M Jul 12  2016 Pinvadens_endo_genome_july2016.fasta
+			-actual size is  9.9 M
+			
+ls -lt
+	-show the last time the file was modified with newest first
+	-notice that some of them have the year
+		-if older than 6 months the year will be shown
+ls -ltr
+	-show the last time the file was modified with oldest first.

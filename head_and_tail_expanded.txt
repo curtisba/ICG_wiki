@@ -1,0 +1,21 @@
+head and tail
+ 
+ head some_file
+ 
+ head tursiops.fa
+
+
+	-by default 10 lines
+	
+head -n some_file where n is an integer
+
+head -2 some_file
+
+
+tail some_file
+	-like head default is 10 lines
+	
+	
+	
+tail -n some_file where n is an integer
+

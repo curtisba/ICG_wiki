@@ -1,0 +1,74 @@
+Documentation by Joran Martijn (11 May 2021)
+
+By default the terminal is a very monotone and hard to navigate. The prompt is indistinguishable from the commands and the output, and the 'ls' output looks the same whether they are files or directories. We can configure our terminal experience by modifying the so-called ''.bashrc'' file.
+
+The ''.bashrc'' file is loaded whenever you open a new terminal session, either by simply opening the Terminal program or by SSHing into a remote server.
+
+NOTE: Logging into Perun seems to be an exception and does not load the ''.bashrc'' by default on login. It instead attempts to load the ''.bash_profile'' file, which is also located in your home folder. If you don't have it, simply create it via ''touch ~/.bash_profile'' and then edit it so it includes the following
+
+<code>
+if [ -f $HOME/.bashrc ]; then
+        source $HOME/.bashrc
+fi
+</code>
+
+Now, when you login, the ''.bash_profile'' is loaded, which in turn loads the ''.bashrc'' file.
+
+=== Adjusting the look of the prompt ===
+
+The look and behaviour of the prompt is controlled by the so called $PS1 environment variable. It can be quite tricky to set this up from scratch, though you are free to try of course. There is many guides out there on the internet. I found that the set up of an old colleague of mine, Jimmy Saw, worked very well.
+
+Add the following line to your ''.bashrc''
+
+<code>
+# Jimmy Saw's prompt (only show current directory)
+export PS1="\[\e[00;37m\][\[\e[0m\]\[\e[00;31m\]\h\[\e[0m\]\[\e[00;37m\]][\[\e[0m\]\[\e[00;32m\]\u\[\e[0m\]\[\e[00;37m\]][\[\e[0m\]\[\e[00;33m\]\W\[\e[0m\]\[\e[00;37m\]] \[\e[0m\]"
+</code>
+
+Reload your .bashrc with ''source ~/.bashrc''. You're prompt should now be colored and more pleasant to look at. It will show you the Hostname in red, your Username in green, and the current directory you are in in yellow. 
+
+Alternatively, if you wish to see the absolute directory path of your current location, you can use this prompt instead:
+
+<code>
+# Jimmy Saw's prompt (show entire directory path)
+export PS1="\[\e[00;37m\][\[\e[0m\]\[\e[00;31m\]\h\[\e[0m\]\[\e[00;37m\]][\[\e[0m\]\[\e[00;32m\]\u\[\e[0m\]\[\e[00;37m\]][\[\e[0m\]\[\e[00;33m\]\w\[\e[0m\]\[\e[00;37m\]] \[\e[0m\]"
+</code>
+
+=== Colored ls output ===
+
+By default, the ls output is very bland and not very user friendly. Let's change that.
+Add to your ''.bashrc'':
+
+<code>
+alias l=‘ls -lap --color=auto’
+alias ll=‘ls -lp --color=auto’ 
+alias ls=‘ls -p --color=auto'
+</code>
+
+The ''--color=auto'' ensures that directories are shown in blue, and executable files like scripts in green, while regular files are the standard color. The ''-p'' further adds trailing slashes to directories to highlight directories even more. ''-a'' toggles hidden files and ''-l'' toggles detailed view.
+
+=== Moving around efficiently ===
+
+Moving around on the filesystem can demand a lot of key strokes, especially if you need to type a very long cd command. I find it very useful to "mark" commonly visited locations in the filesystem, such as base directories of certain projects or directories where you store your git repositories or scripts by setting a number of aliases. Add these to your ''.bashrc'' :
+
+<code>
+alias cdscripts='cd /path/to/scripts'
+alias cdproj1='cd /path/to/proj1'
+alias cdproj2='cd /path/to/proj2'
+</code>
+
+In addition, invoking ''cd'' will take you to your home directory, and ''cd -'' takes you to the previous directory you were in
+
+=== Other useful aliases ===
+
+<code>
+## editor shortcuts
+alias e='emacs -nw'
+
+## common commands
+alias a='source activate'
+alias d='conda deactivate'
+alias editb='emacs -nw ~/.bashrc'
+alias loadb='source ~/.bashrc'
+</code>
+

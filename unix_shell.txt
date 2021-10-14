@@ -1,0 +1,14 @@
+upcoming
+
+Here's a list of commands to retrieve deleted text in vi:
+
+<code>
+u	Undoes the last change
+U	Undoes changes to current line
+p	"Puts" last delete after cursor
+P	"Puts" last delete before cursor
+1p	"Puts" next-to-last delete after cursor
+2p	"Puts" second-to-last delete after cursor
+</code>
+
+<Last updated by Xi Zhang on Oct 6th,2021>

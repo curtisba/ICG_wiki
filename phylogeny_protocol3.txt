@@ -1,0 +1,164 @@
+This part, basically, we are trying to figure out how to acquire the taxa for the genes in MMETSP and NCBI database. First, we display the acc2tax software usage here:
+
+**1. Usage of Acc2tax**
+
+<code>
+#acc2tax https://github.com/richardmleggett/acc2tax 
+# Given a file of accessions or Genbank IDs (one per line), this program will return a taxonomy string for each.
+# http://129.173.88.134:81/dokuwiki/doku.php?id=taxonomy_recovery 
+
+#Input file
+CDH53707
+XP_011133305
+KMU79707
+XP_002963095
+
+#Outputfile
+CDH53707	cellular organisms,Eukaryota,Opisthokonta,Fungi,Fungi incertae sedis,Mucoromycota,Mucoromycotina,Mucoromycetes,Mucorales,Lichtheimiaceae,Lichtheimia,Lichtheimia corymbifera,Lichtheimia corymbifera JMRC:FSU:9682
+XP_011133305	cellular organisms,Eukaryota,Alveolata,Apicomplexa,Conoidasida,Gregarinasina,Eugregarinorida,Gregarinidae,Gregarina,Gregarina niphandrodes
+KMU79707	cellular organisms,Eukaryota,Opisthokonta,Fungi,Dikarya,Ascomycota,saccharomyceta,Pezizomycotina,leotiomyceta,Eurotiomycetes,Eurotiomycetidae,Onygenales,Onygenales incertae sedis,Coccidioides,Coccidioides immitis,Coccidioides immitis RMSCC 3703
+</code>
+
+<code>
+   acc2tax -i /db1/extra-data-sets/Acc2tax/acc2taxIN_example -p -d /db1/extra-data-sets/Acc2tax/Acc2Tax_071119 -o taxonomy.out
+</code>
+
+Note: don't forget to make sure that your input file contains only the accession numbers without their version, see the example file given above. 
+
+E.g., MBI4782295.1 shall be MBI4782295, otherwise the bugs will occur:
+
+<code>
+Couldn't find: [MBI4782295.1]
+
+</code>
+
+Trim the version ".1" behind the accession MBI4782295.1
+
+<code>
+> sed 's/\(.*\)\..*/\1/g' file >out_file
+
+</code>
+
+Note: It can still acquire a list of unknown like below even the NCBI taxonomy database is updated to the latest.
+
+<code>
+Couldn't find: [MBR3349819]
+Couldn't find: [HBS54143]
+Couldn't find: [MYJ28876]
+</code>
+
+This might due to these protein IDs(MBR3349819,HBS54143) from the species cannot put into the taxonomy like NP_051083. i.e., Lineage is not in (full) status.
+
+
+<code>
+NP_051083	cellular organisms,Eukaryota,Viridiplantae,Streptophyta,Streptophytina,Embryophyta,Tracheophyta,Euphyllophyta,Spermatophyta,Magnoliopsida,Mesangiospermae,eudicotyledons,Gunneridae,Pentapetalae,rosids,malvids,Brassicales,Brassicaceae,Camelineae,Arabidopsis,Arabidopsis thaliana
+</code>
+
+<code>
+# acc2tax database directory:
+/misc/db1/extra-data-sets/Acc2tax/Acc2tax_092021		
+</code>
+
+
+**2. MMETSP hierarchical taxonomic info**
+
+<code>
+#New MMETSP database was used containing the taxonomy information.
+dir: >/db1/extra-data-sets/MMETSP/MMETSP_db/MMETSP_DB_clean.v2018.fa
+fasta: >MMETSP0484-20121128|722 Rhodomonas_lens_Strain_RHODO 
+HHYGDSHFBSJBSCJSJKCHSFBSMCNSBCMBSM
+
+# VS
+dir: >/scratch3/sibbald/DATABASES/CAM_P_0001000.pep.renamed_nr_db_temp.fas
+fasta: >Symbiodinium_sp@CP_0181467638_Eukaryota_Alveolata_Dinophyceae_Suessiales_Symbiodiniaceae_Symbiodinium_zzz_CP_0181467638_174948_Symbiodinium_sp_CCMP421
+SDFHSJFBSNVMSNVMSBHVDBCDMSNCSKFNB
+</code>
+
+  * Reducing the redundancy of MMETSP and NCBI-nr. CD-HIT
+
+<code>
+> cd-hit-est -i out_AT5G15450.1_hits.fa -o AT5G15450.1_clp -c 0.8 -n 10
+
+#CD-HIT is a widely used program for clustering biological sequences to reduce sequence redundancy and improve the performance of other sequence analyses.
+
+#sequence identity threshold, default 0.9
+ this is the default cd-hit's "global sequence identity" calculated as:
+ number of identical amino acids in alignment
+ divided by the full length of the shorter sequence
+#nword_length, default 10, see user's guide for choosing it
+</code>
+ 
+**3. Trivia **
+
+<code>
+# acquire the taxon info. 
+>grep 'AT5G53350.1' /Users/####/Desktop/MMETSP/CAM_MMETSP/BLASTP_CAM_MMETSP_tair10_5.tsv |awk '{print $2}'|sed 's/_/\t/g'|awk '{print $3}'|sort -V|uniq >1.txt
+
+#acquire the length of fasta file.
+awk '/^>/{if (l!="") print l; print; l=0; next}{l+=length($0)}END{print l}' /Users/####/Desktop/Athaliana_Project_2021/Athaliana_24_aa.fasta |paste - - |cut -f 1 > col3.txt
+</code>
+
+<code>
+# MMETSP DATASET
+CP_0198131824_1486917_Craspedostauros_australis_CCMP3328
+
+CP_0198725784__Unidentified_sp_CCMP1999
+
+CP_0202964930__Pseudokeronopsis_sp_Brazil
+
+CP_0174260800_1078864_Stereomyxa_ramosa_Chinc5 (0)
+
+# If for some reason the source organism cannot be mapped to the taxonomy 
+ 	 database, the column will contain 0.
+</code>
+
+  * Links 
+
+<code>
+https://github.com/richardmleggett/acc2tax 
+https://ftp.ncbi.nih.gov/pub/taxonomy/
+
+	https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/
+	names.dmp, node.dmp
+	
+# JGI Taxonomy Guide
+
+https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/taxonomy-guide/ 
+	wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdmp.zip 
+	gi_taxid_nucl.dmp   gi_taxid_prot.dmp
+</code>
+
+  * Directories
+
+<code>	
+/misc/scratch2/xizhang/arabidopsis/Taxonomy
+/misc/db1/extra-data-sets/Acc2tax/Acc2tax_092021
+/scratch3/rogerlab_databases/other_dbs/Acc2Tax_Feb122021
+
+nohup zcat dead_nucl.accession2taxid.gz dead_wgs.accession2taxid.gz nucl_gb.accession2taxid.gz nucl_wgs.accession2taxid.gz |sort > nucl_all.txt
+nohup zcat dead_prot.accession2taxid.gz prot.accession2taxid.gz | sort > prot_all.txt
+
+</code>
+
+  * What is the difference of the GenPept format and the GenPept (full)?
+
+<code>
+Full
+Accession.version	taxid
+0308206A	8058
+0308221A	9606
+0308230A	1049
+
+accession	accession.version	taxid	gi
+A0A009IHW8	A0A009IHW8.1	1310613	1835922267
+A0A023FBW4	A0A023FBW4.1	34607	1939884164
+A0A023FBW7	A0A023FBW7.1	34607	1939884197
+</code>
+
+「 ：shift + [ at PinYin keyboard
+
+」: shift + ] at PinYin keyboard
+
+# : command +/
+
+<Last updated by Xi Zhang on Oct 9th,2021>

@@ -1,0 +1,115 @@
+====== MINION SEQUENCING ======
+{{ :minionheart.jpg?400 |}}
+
+Documentation by Sarah Shah and Jon Jerlström Hultqvist
+
+This is a general protocol for monitoring and dealing with a MinION sequencing run.
+
+**Programs used**: albacore ([[https://github.com/dvera/albacore]]), Porechop ([[https://github.com/rrwick/Porechop]]), NanoPlot ([[https://github.com/wdecoster/NanoPlot]])
+
+Make sure there is enough disk space for the sequencing data to be stored.
+
+Once you've loaded your flow cell and hit execute, keep an eye on the MinKNOW interface. Things you need to look out for:
+  * The muxing steps show similar pore availability as when the flow cell was QCed.
+  * The active pore to in-strand pore ratio should preferably be >0.8.
+  * The fragment distribution shows sizes you'd expect to see (if your DNA was fragmented to 8kb, you should see most of your "reads" in this range and some below this size).
+  * The biggest amount of data is produced during the first 12 hours. If there isn't much more data generated after that, you might want to RESTART the run. If that doesn't produce more data, STOP the run before it goes to completion (a run is usually completed in 48 hours) and wash the flow cell and store it for later use.
+<code>
+Number of "events R9.4 flowcell (FLO-MIN106)" x 1.8 = Number of basepairs
+Number of "events R9.5 flowcell (FLO-MIN107)" x 1.5 = Number of basepairs
+
+</code>
+
+Transfer the raw fast5 files using an FTP client such as FileZilla ([[https://filezilla-project.org/]]) to your Perun account. This might take up to a day.
+
+**Basecalling**
+
+Here is an example of a script for albacore:
+
+<code>
+
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+
+source /scratch2/software/Python-3.6.0/set-path
+
+read_fast5_basecaller.py --input /scratch2/sarahshah/MINION_RAW_DATA/Roach/20171103_1655_RoachBlasto --worker_threads 20 --save_path /scratch2/sarahshah/MINION_RAW_DATA/Roach/reads --flo
+wcell FLO-MIN106 --kit SQK-LSK108 --recursive --files_per_batch_folder 0 --output_format fastq --reads_per_fastq_batch 9999999999999
+read_fast5_basecaller.py --input /scratch2/sarahshah/MINION_RAW_DATA/Roach/20171103_1702_RoachBlasto --worker_threads 20 --save_path /scratch2/sarahshah/MINION_RAW_DATA/Roach/reads --flo
+wcell FLO-MIN106 --kit SQK-LSK108 --recursive --files_per_batch_folder 0 --output_format fastq --reads_per_fastq_batch 9999999999999
+
+</code>
+
+The "read_fast5_basecaller.py" line should be repeated for each input folder. Add the ** - - barcoding** to demultiplexing barcoded samples.
+
+If a 1D^2 library has been sequenced (requires the FLO-MIN107 flow cell and the SQK-LSK308 script) has been we should invoke the "full_1dsq_basecaller.py" script to get higher identity "squared reads". To perform squared read-pairing, albacore first performs a regular basecalling and then tries to match matching palindromic reads and infer their consensus. This is at the time of writing (Albacore 2.1.3) a computationally expensive process (6x more intensive than a regular Albacore basecalling). If 1D^2 reads are not desired is also possible to basecall the reads using the standard "read_fast5_basecaller.py" with the kit --SQK-LSK108 flag.
+
+<code>
+
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+
+source /scratch2/software/Python-3.6.0/set-path
+
+full_1dsq_basecaller.py full_1dsq_basecaller.py --input /scratch2/jon/MinION/BMAN/data_2/reads --worker_threads 20 --save_path /scratch2/jon/MinION/BMAN/albacore_basecall_2 --flowcell FLO-MIN107 --kit SQK-LSK308 --recursive --files_per_batch_folder 0 --output_format fastq --reads_per_fastq_batch 9999999999999
+
+</code>
+
+After basecalling is done, merge the "pass" fastq files together. This will be the input for the next step.
+
+*To make sure all files were basecalled, the total number of reads in the fastq files in the "pass" and "fail" folder should roughly match the total number of fast5 files you had. Do:
+<code>
+wc -l *fastq
+</code>
+to count the number of lines. Divide that by 4 to get the number of reads. 
+
+**Adapter Trimming using Porechop**
+
+Porechop trims adapters from ends or inside of reads. Below is an example of a shell script:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 16
+
+export PATH=/scratch2/software/Python-3.6.0/bin:/scratch2/software/gcc-6.3.0/bin:$PATH
+export LD_LIBRARY_PATH=/scratch2/software/Python-3.6.0/lib:/scratch2/software/gcc-6.3.0/lib64:$LD_LIBRARY_PATH
+
+unset PYTHONPATH
+
+porechop -i /scratch2/ginaf/Phaeo_minion/cut_reads/Phaeo_MERGED_uncut.fastq -o /scratch2/ginaf/Phaeo_minion/cut_reads/Phaeo_MERGED_CHOPPED.fastq --threads 16 --verbosity 2
+</code>
+
+To convert a fastq into a fasta (to assemble using miniasm for example), do:
+<code>
+cutadapt -o nameofoutput.fasta nameofyourinput.fastq
+</code>
+
+A fastq file should be roughly double the size of a fasta file.
+
+**Check your trimmed fastq quality using NanoStat/Plot**
+
+This shows you pretty plots and stats.
+
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 8
+
+source /scratch2/software/Python-2.7.13/set-path
+
+NanoPlot -t 8 --drop_outliers --readtype 1D -c purple -o /scratch2/sarahshah/MINION_RAW_DATA/Roach/reads/workspace/pass -f pdf --fastq /scratch2/sarahshah/MINION_RAW_DATA/Roach/reads/workspace/pass/RoachBlasto_minionchopped.fastq
+
+#Remove the flag --drop_outliers if you'd like all of your reads to be analyzed.
+</code>
+
+If your fragments sizes are correct and you have a good reads distribution and N50, you're good continue to **[[assembling_long_read_data|ASSEMBLING LONG READ DATA]]**.

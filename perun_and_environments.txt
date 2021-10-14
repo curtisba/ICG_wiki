@@ -1,0 +1,134 @@
+====== Using environments on perun ======
+
+Below you will find the instructions about how to find and run software **IF it is under CONDA**. You should always check if the software you need is under conda as an **outdated** version of it may be in the environmental variables of the cluster. Since not all software available in perun can be run under an environment there are other places where you could check **[[other_software_locations|]]** and if your software requires databases check **[[databases_locations|]]**.
+
+Perun has conda installed. 
+Conda is a package and environment management system.\\
+Conda installs, runs, and updates packages and their dependencies.\\
+Conda creates, saves, loads and switches between environments.
+
+to see the version of conda on perun
+
+
+''**conda %%--version%%**'' or ''**conda -V**''
+
+To see the list of all the environments on perun (it is very long!)
+
+''**conda info %%--envs%%**'' 
+
+The output should look like this at the top
+
+# conda environments:\\
+#\\
+base                  *  /scratch2/software/anaconda\\
+2pg_cartesian            /scratch2/software/anaconda/envs/2pg_cartesian\\
+Quast-python2            /scratch2/software/anaconda/envs/Quast-python2\\
+Subread                  /scratch2/software/anaconda/envs/Subread\\
+Tophat                   /scratch2/software/anaconda/envs/Tophat\\
+Transdecoder             /scratch2/software/anaconda/envs/Transdecoder\\
+Trimal                   /scratch2/software/anaconda/envs/Trimal\\
+Trinotate                /scratch2/software/anaconda/envs/Trinotate\\
+Unicycler-python3        /scratch2/software/anaconda/envs/Unicycler-python3\\
+
+The active environment is the one with an asterisk
+
+To search the list you can do something like this
+
+''**conda info %%--envs%% |grep blast **''\\
+or\\
+''**conda env list |grep blast ]**''\\
+
+This will provide you with all the environments with the string blast in them\\
+blast                 *  /scratch2/software/anaconda/envs/blast\\
+blast-legacy             /scratch2/software/anaconda/envs/blast-legacy\\
+blastalign               /scratch2/software/anaconda/envs/blastalign\\
+blastbesties             /scratch2/software/anaconda/envs/blastbesties\\
+crb-blast                /scratch2/software/anaconda/envs/crb-blast\\
+genblasta                /scratch2/software/anaconda/envs/genblasta\\
+genblastg                /scratch2/software/anaconda/envs/genblastg\\
+hs-blastn                /scratch2/software/anaconda/envs/hs-blastn\\
+igblast                  /scratch2/software/anaconda/envs/igblast\\
+nanoblaster              /scratch2/software/anaconda/envs/nanoblaster\\
+rmblast                  /scratch2/software/anaconda/envs/rmblast\\
+samblaster               /scratch2/software/anaconda/envs/samblaster\\
+ucsc-blasttopsl          /scratch2/software/anaconda/envs/ucsc-blasttopsl\\
+
+
+To activate or enter an environment
+
+''**source activate name_of_environment**''
+
+So
+
+''**source activate blast**''
+
+will place your session in the blast environment.
+You will notice that the prompt has changed to include the name of the environment like so 
+
+(blast) /home/curtisba
+
+
+To deactivate an environment
+
+''**source deactivate**''
+
+To see the packages and dependencies associated with an environment
+
+''**conda list**'' (if you are already in an environment)
+
+''**conda list -n nameofenvironment**'' (if not in that environment)
+
+(blast) /home/curtisba@perun6> conda list -n samblaster
+
+# packages in environment at /scratch2/software/anaconda/envs/samblaster:\\
+#\\
+# Name                    Version                   Build  Channel\\
+libgcc                    7.2.0                h69d50b8_2  \\
+libgcc-ng                 7.2.0                hdf63c60_3  \\
+libstdcxx-ng              7.2.0                hdf63c60_3  \\
+samblaster                0.1.24               h2d50403_1    bioconda\\
+
+SO,
+to invoke an environment in a qsub shell:
+-----------------------------------------------------------------
+''**#!/bin/bash**''\\
+''**#$ -S /bin/bash**''\\
+''**. /etc/profile**''\\
+''**#$ -cwd**''\\
+''**export PATH=/scratch2/software/anaconda/bin:$PATH**''\\
+''**source activate nameofenvironment**'' [or ''**conda activate nameofenvironment**'']\\
+''**your command line **''\\
+''**source deactivate**''\\
+------------------------------------------------------------------
+
+Some of the more common environments you might be interested in
+
+source activate python36-generic  (albacore, porechop, nanostat, nanoplot) \\
+source activate rseqc+flye-python2 (flye)\\
+source activate python27-generic (ABruijn) \\
+source activate Unicycler-python3 (unicycler) \\
+source activate smartdenovo-python2 (smartdenovo) \\
+source activate nanopolish-python3 (nanopolish)\\
+source activate canu-python3 (canu)\\
+source activate busco
+
+SO, before  running albacore or porechop or nanostat or nanoplot
+
+''**source activate python36-generic**''
+
+**You are already in the environment and do not know what to do next**\\
+
+1- invoke the executable command (see your software manual).\\
+
+2- if no manual is available and you still don't know what executable to call:\\
+
+**let's say you want to use trnascan:**\\
+ conda env list|grep 'trnascan' \\
+ trnascan-se              /scratch2/software/anaconda/envs/trnascan-se\\
+ ls /scratch2/software/anaconda/envs/trnascan-se/bin/\\
+ then select your executable and directly invoke it within the environment:\\
+ tRNAscan-SE
+
+
+
+

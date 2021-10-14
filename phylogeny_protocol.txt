@@ -1,0 +1,112 @@
+**1. Indexing sequences**
+
+What if you have a dataset of interested gene names/IDs, and you want to figure out the homologous and paralogous related genes. The easiest way is to blast against NCBI, but wait! Where to find the protein or nucleotide sequences of your interested genes. Sure! NCBI name search could be the way, but what if your gene ID is not from NCBI and you have thousands of interested genes, e.g., At2G01130, AT4G00010, etc., these are from TAIR10 database (A.thaliana). You are going to need this resource guide. Note: //not listed all excellent resource.// 
+
+Software resource:
+  - Batch entrez
+  - index_header_to_seq
+
+__Batch entrez__ is a web tool (https://www.ncbi.nlm.nih.gov/sites/batchentrez), which is very easy to retrieve FASTA file, especially when you are dealing with batch gene sequence search.
+  - Prepare entrez ID file and upload
+  - Select the ID database
+  - Retrieve and save results in FASTA format  
+
+Note: The only thing is user will need to prepare a list of Entrez accession numbers or other identifiers file recognized by NCBI, e.g., QKK48680.1 which is a GenBank ID in protein database. User might get following error if select wrong database and not recognized NCBI ID.
+
+<code>
+An illegal character in a token. Possible wrong file format. Request processing canceled.
+</code>
+
+
+As mentioned in the very beginning, if your interested gene name OR ID has nothing to do with NCBI and you need the Fasta sequence. There is a simple way to do this via a custom script
+__index_header_to_seq.py__ (https://github.com/zx0223winner/NoBadWordsCombiner/blob/main/Tutorial/index_header_to_seq.py)
+
+<code>
+
+python3 index_header_to_seq.py database_sequence.fasta name_list.txt out_name_listed_seq.fa 
+
+# 'database_sequence.fasta' includes all the sequences of your explored species, e.g., TAIR10 (Athaliana_167_TAIR10.fa); 
+# 'name_list.txt' contains name/ID of your interested genes, each gene name occupied a new line; 
+# 'out_name_listed_seq.fa' is the fasta file you need.
+
+</code>
+
+
+Now, feel free to explore your interested genes via the BLAST+ and v5 database user guide (please refer to http://129.173.88.134:81/dokuwiki/doku.php?id=blast_protocol).
+
+
+**2. Creating and trimming alignments, building the trees.**
+
+Software resource: 
+
+  - Clustal Omega 1.2.3
+  - trimAl v1.2
+  - FastTree 2.1
+
+
+Clustal Omega 1.2.3 (http://www.clustal.org/omega/) is a new multiple sequence alignment program that uses seeded guide trees and HMM profile-profile techniques to generate alignments. The usage is very straightforward: 
+
+<code>
+#For ubuntu system, simply run this to install
+sudo apt install clustalo 
+</code>
+
+<code>
+
+./omega_clustalo-1.2.3 -i input_file.fa -o aligned_file.fa
+</code>
+
+Note: //For protein alignments we recommend Clustal Omega. For DNA alignments we recommend trying MUSCLE or MAFFT.// https://www.ebi.ac.uk/Tools/msa/clustalw2/
+
+trimAl v1.2 (http://trimal.cgenomics.org/trimal) is a tool for the automated removal of spurious sequences or poorly aligned regions from a multiple sequence alignment. For the specific user guide, refers to
+(http://trimal.cgenomics.org/_media/tutorial.pdf)
+
+A very common way of using trimAl v1.2 to trim an alignment is to use just a gap threshold 
+(the minimum fraction of sequences without a gap that you require to consider a column of “enough quality”).Note: please refer to the source page for more usage. http://trimal.cgenomics.org/getting_started_with_trimal_v1.2
+<code>
+trimal -in example1 -out output1 -htmlout output1.html -gt 1
+</code>
+
+Sometimes one does not know which alignment algorithm will perform best (or which parameters, e.g gap penalties). A way out is to just produce different alignments with the different algorithms and then choose the alignment that contains the most consistent residue-pairings, that is the residue pairs that are recovered by most algorithm.
+<code>
+trimal -compareset fileset1 -out output4
+trimal -compareset fileset1 -out output5 -htmlout output5.html -ct 0.5
+</code>
+
+FastTree infers approximately-maximum-likelihood phylogenetic trees from alignments of nucleotide or protein sequences.http://www.microbesonline.org/fasttree/
+
+<code>
+FastTree < alignment_file > tree_file 
+</code>
+
+**3. dN/dS analysis**
+
+Software requirements:
+  - PAML package 
+  - pal2nal
+  - Clustal Omega
+  - FastTree 
+
+The calculation of synonymous (dS) and non-synonymous (dN) substitution rates is important to infer the evolutionary driving force: positive selection (dN/dS>1), neutral selection (dN/dS=1) and negative/purifying selection (dN/dS<1).
+
+
+PAML is a package of programs for phylogenetic analyses of DNA or protein sequences using maximum likelihood. http://abacus.gene.ucl.ac.uk/software/paml.html
+
+PAL2NAL is a program that converts a multiple sequence alignment of proteins and the corresponding DNA (or mRNA) sequences into a codon alignment.http://www.bork.embl.de/pal2nal/
+
+This is an example of batch script when dealing with dN/dS among thousands genes.
+
+<code>
+#!/bin/bash
+for i in *.txt
+do
+  perl pal2nal.pl amino_acid.fa nucleotide.fa -out paml.file -nogap > folder/$i
+done
+</code>
+
+Shell script: codeml and configure file: codeml.ctl
+
+Note: Please refer to the latest version of software for the most updated information. 
+
+
+<Last updated by Xi Zhang on Sep 3rd,2021>

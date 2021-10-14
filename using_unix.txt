@@ -1,0 +1,81 @@
+====== Basic UNIX commands ======
+
+
+Some general comments
+These commands are issued on the command line and should work on a MAC or in a UNIX environment like perun.
+Do not have spaces in the names of files or directories. If you want to separate portions of the name to make it more obvious use _ or . or – like so lord_of_the_rings.txt
+
+Most UNIX environments are case sensitive so myfile and Myfile are two different names and files. MACs are modified UNIX environments and are case insensitive but case preserving which means Foo and foo are seen as the same name by the system but the system will preserve whatever you type.
+
+File extensions like .txt or .pl or .doc are not required on UNIX systems but are often used anyway to make it more obvious to the human reader what a file might be.
+
+You can have multiple terminals open on a  UNIX (and UNIX-like systems (MAC)) and can run multiple processes at the same time.
+
+
+•**ls** --- lists your files  ls -l --- lists your files in 'long format', which contains lots of useful information, e.g. the exact size of the file, who owns the file and who has the right to look at it, and when it was last modified.  ls -a --- lists all files, including the ones whose filenames begin in a dot, which you do not always want to see.  There are many more options, for example to list files by size, by date, recursively etc.
+
+•**cd dirname** --- change directory. You basically 'go' to another directory, and you will see the files in that directory when you do 'ls'. You always start out in your 'home directory', and you can get back there by typing 'cd' without arguments. 'cd ..' will get you one level up from your current position.  You can navigate to any directory by providing the absolute path for that directory. So, cd /home/myname/blastfiles/jan would take you to the jan directory in the directory blastfiles in the directory myname which is in the basal directory home. You can also use relative pathnames to navigate to directories. For example if you were already in /home/myname/blastfiles/ you could do cd jan to go into the jan directory. A period .  denotes current directory
+
+•**more filename** --- shows the first part of a file - as much as will fit on one screen. Just hit the space bar to see more or q to quit
+
+•**less filename** -- similar to more but has more sophisticated search and navigation abilities. Once  you are within the less window you can navigate or search with certain keys, Eg. b for previous page, g for first line, G for last line, /searchtext to find a string, etc (see man page man less).
+
+•**cat filename** ---displays the entire content of a file to the screen
+
+•**mv filename1 filename2** --- moves a file (i.e. gives it a different name, or moves it into a different directory (see below)
+
+•**cp filename1 filename2** --- copies a file
+
+•**rm filename** --- removes a file. It is wise to use the option rm -i, which will ask you for confirmation before actually deleting anything. You can make this your default by making an alias in your .cshrc file.
+
+•**diff filename1 filename2** --- compares files, and shows where they differ
+
+•**wc filename** --- tells you how many lines, words, and characters there are in a file
+
+•**chmod** options **filename** --- lets you change the read, write, and execute permissions on your files. The default is that only you can look at them and change them, but you may sometimes want to change these permissions.  For example, if you write a program or install someone else’s program you need to make it executable to run it. There are three levels of permissions: the owner of the file (you); the group you belong to; and everyone else. Each level has it own permissions. To see the permissions for the three levels you can do ls –l and this will list the permissions for each file. It will probably look something like this -rw-r--r--. The first position indicates whether it is a file or a folder(directory). A d in this position indicates that it is a directory while a - indicates that it is a file. The first position is then followed by 9 positions, 3 for the owner of the file, 3 for the group you belong to and 3 for everyone else. Within the group of 3 the first position is for read permission (r), the second position indicates write permission (w) and the third position indicates executable permission (x). So, -rw-r--r-- means that it is a file and the owner has read and write permission while those in the group that the owner belongs to only have read permission (r) just like everyone else. –rw-rw-rw- means the owner, the group and everyone else have both read and write permission. Note that directories must be executable for you to access them. So, drwxr-xr-x is a directory that is accessible to the owner, the group and everyone else but only the owner has write permission for that directory. There are several options to modify file and directory permissions. The easiest is to assign values to the permissions. R=4, w=2, x=1. So -rw-r--r—is 644 (read/write = 4+2 for the owner, read =4 for the group, read=4 for everyone else. So, to give the owner, the group and everyone else read/write permissions you would issue the command chmod 666 filename.
+
+•**gzip filename** --- compresses files, so that they take up much less space. Usually text files compress to about half their original size, but it depends very much on the size of the file and the nature of the contents. There are other tools for this purpose but gzip usually gives the highest compression rate. Gzip produces files with the ending '.gz' appended to the original filename.
+
+•**gunzip filename** --- uncompresses files compressed by gzip.
+•**mkdir dirname** --- make a new directory
+•**pwd** --- tells you where you currently are.
+•**man command** --- will show the manual entry for the unix command. For example, man ls will show all the options for the common unix command ls.
+•***** is the UNIX symbol for global and can be with many of the other commands. Eg to list all the files in a directory that start with the  character b ls b*. To list all the files that start with g and end in fasta  ls g*fasta. To copy all the files that end in blastx to the directory above the current one cp *blastx .. . To change the permissions on all fasta files to rw, rw, r chmod 664 *fasta. Remove all the files that start with t and end in pid rm t*pid
+
+
+
+More advanced UNIX commands
+
+**grep searchtext filename** --- will search a file line by line for the presence of a searchtext. For example, grep frodo lord_of_the_rings.txt will search for the text frodo in the file lord_of_the_rings. If your search text includes spaces or special characters you need to double quote it – grep “the one ring" lord_of_the_rings. One of the options for grep is -v which means find all the lines that DO NOT contain the string and output them to the screen (or file if you redirect the output (see below)). Another useful grep option is -i which means ignore the case of the searchtext, so grep -i foo file will find lines that contain FOO, foo, FoO, fOO, FOo, fOo in the file file.
+
+**ssh -l username url_of_system.** Eg. ssh -l curtisba perun.biochem.dal.ca.  You will then be asked for your password for the remote system. Allows you to connect (login) to external computer systems via the ssh protocol. The external computer system must have a ssh server running (most UNIX systems do).
+
+**scp** - secure copy protocol. Allows you to securely copy files from one computer system to another. To copy a file from you local computer to a remote computer
+scp name_of_file username@remote_computer_system:/absolute_pathway_for_destination_folder/
+eg. scp myfile curtisba@perun.biochem.dal.ca:/home/curtisba/raxmlruns/
+To copy from a remote computer to your local
+scp username@remote_computer_system:/absolute_pathway_of _file pathway_on_local_computer
+Typically you would issue the command from the directory where you want the file to reside. Eg.
+scp curtisba@perun.biochem.dal.ca:/home/curtisba/raxmlruns/psb.phy .
+Note the command ends with a period. This means in the current directory. You could have supplied a pathway, absolute or relative, that was more extensive.
+You will be asked for the password for the remote computer system.
+
+**sort** -will sort the contents of a file and print it to the screen (or file if redirected).  Without the option -n (for numeric) the contents will be sorted alphabetically.
+Lines are sorted based on the first character in the first column. You can sort by other columns (or fields) with columns (fields) separated by blank space. Eg to sort a file that contains by the numbers in the second column
+bob 310
+carol 467
+ann 906
+ sort -nk2 file_name with n indicating to sort numerically and k 2 indicating the second column(field)
+To sort in reverse numerically sort -nrk2 file_name
+
+**>** -unix for redirect output. Normally the results of a unix command like ls will output to the screen. However, you can redirect the results to a file. Eg. ls -l > what_files_exist
+
+**|** -unix for piping results  of one command into another command. This allows you to string together unix commands. Eg. ls - l | grep curtisba | wc will  tell me how many files in the current directory contain the searchtext curtisba
+
+**cut** -cut up lines of a file by  columns or a single character delimiter. Eg to cut the 3 lines in the file money by the comma and print out what type of metal cut -d"," -f2
+30,gold
+50,silver
+80,bronze
+where -d indicates that the delimiter in quotes is to be used and -f2 indicates the second field is to be displayed (the first field would be 30 50 and 80). To display the amount only cut -d"," -f1 or cut -c1-2 with -c indicating that you want the columns from 1 to 2 displayed for each line.
+
+text editors. Most  UNIX systems come with several text editors. The easiest (very  rudimentary and limited but usually that is all you need) is pico or nano. More sophisticated are emacs and vi. To invoke any of them simply type the name on the command line and press enter.

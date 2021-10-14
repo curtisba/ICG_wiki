@@ -1,0 +1,411 @@
+EMBOSS  utilities
+	-commandline
+		-on perun
+			-conda environment
+				-source activate emboss
+	-online graphical interface
+		https://emboss.bioinformatics.nl/cgi-bin/emboss/
+			-also includes documentation 
+		https://www.ebi.ac.uk/services/all
+			-doesn’t seem to have all of them
+	-local install (good luck with that)
+
+	-common syntax
+		-help
+		-sequence
+		-outfile
+		-outseq
+		Name_of_multifasta_file:name_of_individual_fasta
+		-auto
+
+	-lots of output file formats
+		embl, genbank, gff, pir, swiss
+
+
+How to change lowercase to upper case 
+
+
+more p12
+  >seqW
+  AGGGTGTGGTGCCCGGccccttt
+  >tok3
+  Ccgtgaccgggatact
+
+maskfeat -sequence p12 -supper1 -outseq p12upper
+  >seqW
+  AGGGTGTGGTGCCCGGCCCCTTT
+  >tok3
+  CCGTGACCGGGATACT
+
+
+
+
+
+
+
+
+
+
+
+
+How to sort a multifasta file based on size of individual sequences
+	-can be largest or smallest first
+
+more p15
+  >M86863.1
+  GTAACATGACGTTGACC
+  >seq15
+  ACTCGGGGGCGGAGTGGGTCACACTTTCCTTTACTCGGGGGCGGAGTGGGTCACGTGACTTTCCTTT
+  >seq2
+  ACTCGGGGGCGGAGTGGGTCACGTGACTTTCCTTT
+  >NINA
+  TTTA
+
+sizeseq -sequence p15 -outseq p15sized -descending N
+
+more p15sized
+  >NINA
+  TTTA
+  >M86863.1
+  GTAACATGACGTTGACC
+  >seq2
+  ACTCGGGGGCGGAGTGGGTCACGTGACTTTCCTTT
+  >seq15
+  ACTCGGGGGCGGAGTGGGTCACACTTTCCTTTACTCGGGGGCGGAGTGGGTCACGTGACT
+  TTCCTTT
+		-note that the output is interleaved
+		-to reverse size order -descending Y
+
+
+How to get basic info about the individual fastas
+	-length
+	-GC%
+
+infoseq p2.fasta -length -only
+Display basic information about sequences
+Length 
+25     
+54     
+32     
+32     
+25  
+		-if you want to save the information -outfile name_of_file
+		-can just do infoseq p2.fasta
+
+
+
+How to reverse and/or complement fastas
+
+revseq
+	-can do just reverse, just complement or both
+
+More p7.fasta
+  >seq1
+  AAAAAAAAAAGGGGGGGGGG
+  >seq2
+  AGAGAGTT
+
+revseq -sequence p7.fasta -outseq p7justcomplemented -reverse N
+Or 
+revseq -sequence p7.fasta -outseq p7justcomplemented -noreverse
+  >seq1
+  TTTTTTTTTTCCCCCCCCCC
+  >seq2
+  TCTCTCAA
+
+revseq -sequence p7.fasta -outseq p7justrev -nocomplement
+or
+revseq -sequence p7.fasta -outseq p7justreve -complement N
+  >seq1
+  GGGGGGGGGGAAAAAAAAAA
+  >seq2
+  TTGAGAGA
+
+To both reverse and complement
+revseq -sequence p7.fasta -outseq p7rcemboss
+  >seq1 Reversed:
+  CCCCCCCCCCTTTTTTTTTT
+  >seq2 Reversed:
+  AACTCTCT
+If you don’t want the string Reversed: in the header put -notag or -tag N
+
+
+
+
+How to split a multifasta into individual fastas
+I like to make a separate directory to hold the individual fastas but it is not necessary.
+mkdir -m 777 SPLIT_GENOME
+mv genome SPLIT_GENOME
+cd SPLIT_GENOME/
+grep ">" genome -c
+68
+
+Fastest way is
+seqretsplit genome -auto
+	-auto will turn off prompting for file names
+	-.fasta will be added to the name of each individual fasta file
+	which is derived from the header
+		-will make the name of the file lower case
+			-the header remains the same
+		-will make the lines 60 characters wide
+	-little control over names of individual files
+		-osextension2 string
+
+
+How to do an amino acid translation of a multifasta
+	transeq
+		-will simply translate the sequences and insert * for stops
+		-can change *s to Xs
+			-clean
+		-can translate different frames
+			-frame 1 is default
+				-frame 1
+				-frame 2
+				-frame 3
+				-frame F
+				-frame -1
+				-frame -2
+				-frame -3
+				-frame R
+				-frame 6 
+		-can use different genetic codes
+			-table 0 (standard and default)
+			-table  2 (Vertebrate mitochondrial)
+			-table 11 (Bacterial)
+		-can designate a range or region otherwise entire thing
+			-regions 24-100
+
+		-output is sequence-name_frame-number
+			Eg >seqA_4
+more p11
+  >seqA
+  CCCTGGCGATTAAGCCAGACATTAGTCCGGGGCATCCCAGCTCGTGATTTCAGGGGCGAC
+  CACTTTCGAAAATGGGCACGACCCAGCGCAACGAGTTGGAACGCTATCGCCGGGAGATTG
+  GCTTAATCGCGAGCGCTAGCTAGGCACTAGCGATCTAGGGGATGTGCCGACTGTAGCTCC
+  >seqB
+  TCCAACATGCCGACCCGTTCCATCCACCACAAGACCGAGACCACTGTCGTCTTCGCGGAAAGCCCGCCCATGCGCCCCGGCTCGCTCGCGCTCGTCGTAGTCAACAGAGT
+  GCATACACGGTCCTTGCGGCAGACGAAGGTCCCAGTGGCCGTGATGTCGCCCCGTGCTTCCCAGACGACCGACCTGCTTGCTGACTGGGCGATTGTTGTCATCCAGTACC
+  TCGAGGATCTTTTCGGGGTCGAGTTCCCCATCCCAAAGCTCGACATCGTCTTCCTCCCCGAGTTCCCCGTGTCCGCCTTTGAGAACTTCGGCTGCATCCTGTTCAGAAAG
+  ACAACCGCCCGACTCCCGACTCTTTTTTCGACTGTGGCGCACGAGATCATCCACCAGTACTTTGGGCAGGGTGTAGGCCACGCCAGGGCCCATGAGACGTTCCTTGCTGA
+  GGGCCCCGCCCGTTTCTTCCAGTACAAGGTCATGGCCGACTGCTTCGAGGAGTTCAACAGAGCCCATAGCCTCGAAAGACAGCTGCCGGACTTGGCAGCGAAGTTCTACA
+  TTGATGTCATCGATGCAGGCCTGGCTAAGGAGACTGCGTGTCCGCCCTTTACACTGGGGCTCACTCCAGACGTCAGGGTCGAGCGGCGCGAGGGGGCATATGTCACTGTA
+  GTCGGGGCAGAGATTTGTCAGAATGACGCATTCTATGACGATTTGGTCTATACAAAGGGCGCGGCGCTGTTTCATATGATCGCAGGTCTGTTTCCCGCGACAGCTGGGCA
+  CAATCCGTTCATTCGTGCGCTGTCAGCATACTTATCTGACAACATGTTCTCCGATGTCACTAGCGAGACGTTAATTTCGTATTTAACGAAGCTGAGACACCCAGAGATTC
+  CCGCTCAGATCATTACGAAGCTGATCCACGACCACATCAACCTACCCCTGTTCCCGACTGTAGCAGCGTCGGTTGTACCCATCGCAGAC
+
+
+		transeq -sequence p11 -outseq wha -frame 1,2
+  >seqA_1
+  PWRLSQTLVRGIPARDFRGDHFRKWARPSATSWNAIAGRLA*SRALARH*RSRGCADCSS
+  >seqA_2
+  PGD*ARH*SGASQLVISGATTFENGHDPAQRVGTLSPGDWLNRER*LGTSDLGDVPTVAP
+  >seqB_1
+  SNMPTRSIHHKTETTVVFAESPPMRPGSLALVVVNRVHTRSLRQTKVPVAVMSPRASQTT
+  DLLADWAIVVIQYLEDLFGVEFPIPKLDIVFLPEFPVSAFENFGCILFRKTTARLPTLFS
+  TVAHEIIHQYFGQGVGHARAHETFLAEGPARFFQYKVMADCFEEFNRAHSLERQLPDLAA
+  KFYIDVIDAGLAKETACPPFTLGLTPDVRVERREGAYVTVVGAEICQNDAFYDDLVYTKG
+  AALFHMIAGLFPATAGHNPFIRALSAYLSDNMFSDVTSETLISYLTKLRHPEIPAQIITK
+  LIHDHINLPLFPTVAASVVPIAD
+  >seqB_2
+  PTCRPVPSTTRPRPLSSSRKARPCAPARSRSS*STECIHGPCGRRRSQWP*CRPVLPRRP
+  TCLLTGRLLSSSTSRIFSGSSSPSQSSTSSSSPSSPCPPLRTSAASCSERQPPDSRLFFR
+  LWRTRSSTSTLGRV*ATPGPMRRSLLRAPPVSSSTRSWPTASRSSTEPIASKDSCRTWQR
+  SSTLMSSMQAWLRRLRVRPLHWGSLQTSGSSGARGHMSL*SGQRFVRMTHSMTIWSIQRA
+  RRCFI*SQVCFPRQLGTIRSFVRCQHTYLTTCSPMSLARR*FRI*RS*DTQRFPLRSLRS
+  *STTTSTYPCSRL*QRRLYPSQT
+
+transeq -sequence p11 -outseq wha -frame 1,2 -clean
+  >seqA_1
+  PWRLSQTLVRGIPARDFRGDHFRKWARPSATSWNAIAGRLAXSRALARHXRSRGCADCSS
+  >seqA_2
+  PGDXARHXSGASQLVISGATTFENGHDPAQRVGTLSPGDWLNRERXLGTSDLGDVPTVAP
+  >seqB_1
+  SNMPTRSIHHKTETTVVFAESPPMRPGSLALVVVNRVHTRSLRQTKVPVAVMSPRASQTT
+  DLLADWAIVVIQYLEDLFGVEFPIPKLDIVFLPEFPVSAFENFGCILFRKTTARLPTLFS
+  TVAHEIIHQYFGQGVGHARAHETFLAEGPARFFQYKVMADCFEEFNRAHSLERQLPDLAA
+  KFYIDVIDAGLAKETACPPFTLGLTPDVRVERREGAYVTVVGAEICQNDAFYDDLVYTKG
+  AALFHMIAGLFPATAGHNPFIRALSAYLSDNMFSDVTSETLISYLTKLRHPEIPAQIITK
+  LIHDHINLPLFPTVAASVVPIAD
+  >seqB_2
+  PTCRPVPSTTRPRPLSSSRKARPCAPARSRSSXSTECIHGPCGRRRSQWPXCRPVLPRRP
+  TCLLTGRLLSSSTSRIFSGSSSPSQSSTSSSSPSSPCPPLRTSAASCSERQPPDSRLFFR
+  LWRTRSSTSTLGRVXATPGPMRRSLLRAPPVSSSTRSWPTASRSSTEPIASKDSCRTWQR
+  SSTLMSSMQAWLRRLRVRPLHWGSLQTSGSSGARGHMSLXSGQRFVRMTHSMTIWSIQRA
+  RRCFIXSQVCFPRQLGTIRSFVRCQHTYLTTCSPMSLARRXFRIXRSXDTQRFPLRSLRS
+  XSTTTSTYPCSRLXQRRLYPSQT
+
+	sixpack
+		-more output option than transeq
+		-tries to find orfs in a sequence
+		-ONLY TAKES ONE SEQUENCE
+		-generates two files
+			-outseq=protein sequences
+			-outfile=graphical six frame translation and numbers of 
+			ORFs per frame
+
+	First example with just one sequence
+more p10
+  >seqA
+  CCCTGGCGATTAAGCCAGACATTAGTCCGGGGCATCCCAGCTCGTGATTTCAGGGGCGAC
+  CACTTTCGAAAATGGGCACGACCCAGCGCAACGAGTTGGAACGCTATCGCCGGGAGATTG
+  GCTTAATCGCGAGCGCTAGCTAGGCACTAGCGATCTAGGGGATGTGCCGACTGTAGCTCC
+
+sixpack -sequence p10 -outseq p10.prot.fa -outfile p10.stuff
+  >seqA_1_ORF1  Translation of seqA in frame 1, ORF 1, threshold 1, 41aa
+  PMRLSQTLVRGIPARDFRGDHFRKWARPSATSWNAIAGRLA
+  >seqA_1_ORF2  Translation of seqA in frame 1, ORF 2, threshold 1, 7aa
+  SRALARH
+  >seqA_1_ORF3  Translation of seqA in frame 1, ORF 3, threshold 1, 10aa
+  RSRGCADCSS
+  >seqA_2_ORF1  Translation of seqA in frame 2, ORF 1, threshold 1, 3aa
+  PCD
+  >seqA_2_ORF2  Translation of seqA in frame 2, ORF 2, threshold 1, 3aa
+  ARH
+  >seqA_2_ORF3  Translation of seqA in frame 2, ORF 3, threshold 1, 37aa
+  SGASQLVISGATTFENGHDPAQRVGTLSPGDWLNRER
+  >seqA_2_ORF4  Translation of seqA in frame 2, ORF 4, threshold 1, 14aa
+  LGTSDLGDVPTVAP
+  >seqA_3_ORF1  Translation of seqA in frame 3, ORF 1, threshold 1, 14aa
+  HAIKPDISPGHPSS
+  >seqA_3_ORF2  Translation of seqA in frame 3, ORF 2, threshold 1, 31aa
+  FQGRPLSKMGTTQRNELERYRREIGLIASAS
+  >seqA_3_ORF3  Translation of seqA in frame 3, ORF 3, threshold 1, 4aa
+  ALAI
+  >seqA_3_ORF4  Translation of seqA in frame 3, ORF 4, threshold 1, 5aa
+  GMCRL
+  >seqA_3_ORF5  Translation of seqA in frame 3, ORF 5, threshold 1, 2aa
+  LX
+  >seqA_4_ORF1  Translation of seqA in frame 4, ORF 1, threshold 1, 14aa
+  GATVGTSPRSLVPS
+  >seqA_4_ORF2  Translation of seqA in frame 4, ORF 2, threshold 1, 37aa
+  RSRLSQSPGDSVPTRCAGSCPFSKVVAPEITSWDAPD
+  >seqA_4_ORF3  Translation of seqA in frame 4, ORF 3, threshold 1, 3aa
+  CLA
+  >seqA_4_ORF4  Translation of seqA in frame 4, ORF 4, threshold 1, 3aa
+  SHG
+  >seqA_5_ORF1  Translation of seqA in frame 5, ORF 1, threshold 1, 7aa
+  SYSRHIP
+  >seqA_5_ORF2  Translation of seqA in frame 5, ORF 2, threshold 1, 4aa
+  IASA
+  >seqA_5_ORF3  Translation of seqA in frame 5, ORF 3, threshold 1, 11aa
+  LALAIKPISRR
+  >seqA_5_ORF4  Translation of seqA in frame 5, ORF 4, threshold 1, 17aa
+  RSNSLRWVVPIFESGRP
+  >seqA_5_ORF5  Translation of seqA in frame 5, ORF 5, threshold 1, 17aa
+  NHELGCPGLMSGLIAWX
+  >seqA_6_ORF1  Translation of seqA in frame 6, ORF 1, threshold 1, 10aa
+  ELQSAHPLDR
+  >seqA_6_ORF2  Translation of seqA in frame 6, ORF 2, threshold 1, 7aa
+  CLASARD
+  >seqA_6_ORF3  Translation of seqA in frame 6, ORF 3, threshold 1, 41aa
+  ANLPAIAFQLVALGRAHFRKWSPLKSRAGMPRTNVWLNRMG
+
+
+	Refine the output
+	
+sixpack -sequence p10 -outseq p10.prot.fa -outfile p10.stuff -nofirstorf -nolastorf -orfminsize 30
+
+  >seqA_1_ORF1  Translation of seqA in frame 1, ORF 1, threshold 30, 41aa
+  PMRLSQTLVRGIPARDFRGDHFRKWARPSATSWNAIAGRLA
+  >seqA_2_ORF1  Translation of seqA in frame 2, ORF 1, threshold 30, 37aa
+  SGASQLVISGATTFENGHDPAQRVGTLSPGDWLNRER
+  >seqA_3_ORF1  Translation of seqA in frame 3, ORF 1, threshold 30, 31aa
+  FQGRPLSKMGTTQRNELERYRREIGLIASAS
+  >seqA_4_ORF1  Translation of seqA in frame 4, ORF 1, threshold 30, 37aa
+  RSRLSQSPGDSVPTRCAGSCPFSKVVAPEITSWDAPD
+
+
+sixpack -sequence p10 -outseq p10.prot.fa -outfile p10.stuff -nofirstorf -nolastorf -orfminsize 30 -mstart Y
+
+  >seqA_1_ORF1  Translation of seqA in frame 1, ORF 1, threshold 30, 40aa
+  MRLSQTLVRGIPARDFRGDHFRKWARPSATSWNAIAGRLA
+
+How to do multiple fastas?
+mkdir -m 777 SPLIT
+cp p11 SPLIT
+cd SPLIT
+seqretsplit p11 -auto
+	-generates individual fastas 
+ls *fasta > list
+	-if necessary remove the multifasta file name from list
+
+for i in `cat list`; do sixpack -sequence $i -outfile $i.stuff -outseq $i.prot; done
+
+can collect all the outputs together if you want
+cat *prot >alloutputs
+
+
+
+How to extract regions 
+
+more p2.fasta
+  >sequence1 blahblah
+  ACGTACGTACGTACGTACGTACGTT
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >myfavourite
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >myfav2
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >contig23 acanth
+  AGTAGTGACTGAGTAATAGACGTAG
+
+extractseq p2.fasta:myfav2 -reg "1-5" -outseq blah2
+
+  >myfav2
+  AGAGA
+
+extractseq p2.fasta:myfav2 -reg "1-5 7-9" -outseq blah2 -separate
+  >myfav2_1_5
+  AGAGA
+  >myfav2_7_9
+  AGA
+
+
+How to extract a subset of fastas from a multifasta
+See http://129.173.88.134:81/dokuwiki/doku.php?id=extracting_a_single_fasta_entry_or_multiple_from_a_multifasta_file
+
+seqret
+
+more p2.fasta
+  >sequence1 blahblah
+  ACGTACGTACGTACGTACGTACGTT
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+  >myfavourite
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >myfav2
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >contig23 acanth
+  AGTAGTGACTGAGTAATAGACGTAG
+
+Want to extract just myfav2 and sequence47
+
+Make a list with the sequences you want like this
+Name_of_multifastafile:name_of_individual_file1
+Name_of_multifastafile:name_of_individual_file1
+
+
+SO,
+more filestoget 
+p2.fasta:myfav2
+p2.fasta:sequence47
+
+Then
+seqret @filestoget -outseq myfavouritefiles -auto
+
+more myfavouritefiles 
+  >myfav2
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >sequence47 bluhbluhbluh
+  TTTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCCCC
+
+If there is a common and unique string to the header ids you can use that
+
+seqret p2.fasta:my* -outseq yup -auto
+
+more yup
+  >myfavourite
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG
+  >myfav2
+  AGAGAGAGAGAGAGAGAGAGAGAGAGAGAGAG

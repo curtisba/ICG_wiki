@@ -1,0 +1,208 @@
+
+**Orthology detection for metabolic pathways using genomic data and Panther data** Preparared by D. E. Salas-Leiva
+
+**Programs that will be used:**\\
+1- Blast and hmmr software to carry out homology searches.  Available at perun's environmental path\\
+2- maftt, trimal, fastree used for tree reconstruction Available at perun's environmental path or at /home/dsalas/Shared/\\
+3- python scripts written by Dayana at: /home/dsalas/Shared/RNAdecayCarp/Scripts\\
+  * Blastp_search.sh
+  * BlastParser.by.Pident.py  use python36-generic
+  * ShellMaker2.py  use python36-generic
+  * Tsv_parser.py  use python36-generic
+  * SeqCollector.py  use python36-generic
+  * ETE_standAlone1.4.py  use python27-generic
+
+**Initial information required**\\
+1- Query sequences in fasta format:\\
+These **MUST** belong to proteins with experimental evidence from **MODEL ORGANISMS**. This information should be gathered through literature searches, as well as download the information from specialized databases. Query sequences from model organisms in which the pathway of interest has been very well studied.
+
+
+2- Databases:\\
+
+1- Panther data. For the current workflow 103 proteomes were gathered and reparsed from Uniprot (it contains Archaea, Bacteria, Eukaryota). This data is organized as:\\
+
+  * A full proteome blast-able database at:  /scratch3/rogerlab_databases/other_dbs/UniProt103.fasta
+  * A full panther classification file for each protein in Uniprot103.fasta at: /scratch3/rogerlab_databases/other_dbs/PTHR_103classification.tsv
+  * A full panther database containing hmm profiles by panther superfamily at: /db1/extra-data-sets/panther/PANTHER13.1/books/
+  * A full panther database containing fasta files by panther superfamily at: /scratch3/rogerlab_databases/other_dbs/UniProt103_byPTHRfam
+2-  Pfam-A hmmr database at: /scratch3/rogerlab_databases/other_dbs/ Pfam-A.hmm
+
+3- Predicted proteomes:\\
+The directory containing the predicted proteomes is called 'Pred_Proteomes_playground'.\\
+   For Carperdiemonas membranifera paper these are the predicted proteomes:
+   Carp_sept19.aa.fasta   Cfrisia.masked.aa.fasta   GinA_50803.aa.fasta   GinB_50581.aa.fasta   Gmuris.aa.fasta
+   Kipferlia.aa.fasta   Monoc.aa.fasta   SSAL.aa.fasta   Trepo.aa.fasta   Trich.aa.fasta
+
+**Protocol overview:**\\
+1- Blast queries against Uniprot103 database to get the best matching sequence\\
+2- Obtain the panther classification for that sequence (panther super-family and subfamily)\\
+3- Scan the predicted proteomes using the hmm profile corresponding to the **subfamily**\\
+4- Parse the hmm output: empty files and files with results\\
+5- Redo the scan on the predicted proteomes but this time using the hmm profile corresponding to the **superfamily**\\
+6- Parse the hmm output: empty files and files with results, Concatenate the parsed results from step 4 and 6, Retrieve the sequences mentioned from each predicted proteome by Panther super-family, Create a working fasta file with each of the candidates and panther files from UniProt103_byPTHRfam (see above), Create shells for sequence aligment, trimming and tree search\\
+7- Tree search
+8- Map protein domain architecture to each tree and build a pdf file by panther super-family\\
+9- Creating a tabulated file to keep track of the findings\\
+10- Move the pdf to your desktop for tree inspection and orthology assigment.\\
+
+
+**Detailed Protocol:**\\
+Note: The pathway of interest for this example is the RNA decay pathway, query file name is RNAreduced.seqs and Metadata associated is RNAreduced.METADATA\\
+
+**BEFORE TO START: make a working directory, copy the predicted proteomes, queries and metadata, and the scripts for this workflow:** \\
+   mkdir Pred_Proteomes_playground
+   cp Queries/* Pred_Proteomes_playground/
+   cp Comparative_Genomics/* Pred_Proteomes_playground/
+   cp *.py Blastp*.sh Pred_Proteomes_playground/
+   cd Pred_Proteomes_playground
+
+
+**Step 1:** Blast vs Uniprot103 \\
+Run blast search against UniProt103.fasta to find the closest Panther superfamily for each of the queries from model organisms and then parse the blast output by identity and e-value:\\
+The query file name is **RNAreduced.seqs**, the blast output will be called **RNA.reduced.blastout** and the shell is **Blastp_search.sh**\\
+
+Parse the blast output by identity and e-value: 
+Given the queries you are using (see Initial information required) it is highly likely that these sequences will find themselves during the blast search against UniProt103.fasta
+[For more information on species contained in Panther see the file PTHR_103classification.tsv or visit http://www.pantherdb.org/].
+
+   source activate python36-generic
+   python BlastParser.by.Pident.py RNA.reduced.blastout
+   source deactivate
+
+The resulting file 'RNA.reduced.blastout_pparsed.tab' should contain one result by query. To check this, use the following commands:
+
+To figure out how many sequences you started with:
+   grep ‘>’ RNAreduced.seqs | wc -l
+   outputs is -> 97 RNAreduced.seqs
+To figure out how many blast hits output you have:
+   wc -l RNA.reduced.blastout
+   outputs is -> 99 RNA.reduced.blastout
+   wc -l RNA.reduced.blastout_pparsed.tab
+   outputs is -> 98 RNA.reduced.blastout_pparsed.tab
+Note: Remember that this file has a header, so the total of blast results is 97, so everything is fine so far.
+If your number of queries and blast output results differ: 1) double check your input files for errors in format 2) go online to panther to check if the panther family for the query of your interest has been curated and/or exists.
+
+**Step 2:** Getting the panther codes
+Obtain the codes for each panther super-family and subfamily for each query by using the command commands below and the PTHR_103classification.tsv to create a customized file for your queries.
+
+Post-processing the blast output to get panther information:
+1) Separate the first column that correspond to the queries accession numbers:
+   cut -d $'\t' RNA.reduced.blastout_pparsed.tab -f1 > queries_acc
+2) The uniprot accession numbers (these numbers will be used to grep PTHR_103classification.tsv):
+   cut -d $'\t' RNA.reduced.blastout_pparsed.tab -f2|cut -d '|' -f2 > hits_acc  
+3) Create a file containing both columns for future crosschecking:
+   paste -d $'\t' queries_acc hits_acc > query_hits_columns
+4)  remove the header of query_hits_columns:
+    sed -i '/query ID\tsubject ID/d' query_hits_columns
+Getting the information from panther classification:
+Now, create a file containing the panther information only for 97 queries, by grepping the hits_acc information from the PTHR_103classification.tsv:
+5) create a file containing the panther information 97 queries:
+   grep -w -F -f hits_acc /scratch3/rogerlab_databases/other_dbs/PTHR_103classification.tsv > Panther97queries_hit_info.tsv  
+6) Create a tsv file containing identify the panther families by hits_acc:
+   cut -d $'\t' -f1,2,3 Panther97queries_hit_info.tsv |cut -d '|' -f3,4|cut -d '=' -f2 > Pantherby97Uniprotaccession.tsv
+7) eliminate extra tabulations in the file:
+   sed -i.bak 's/\t\t/\t/g' Pantherby97Uniprotaccession.tsv
+   sed -i 's/:/_/g' Pantherby97Uniprotaccession.tsv
+8) Creating a cheat sheet for you. Sort and Merge the headerless file ‘query_hits_columns’ with ‘Pantherby97Uniprotaccession.tsv’:
+
+   sort -u -k 2 query_hits_columns > sorted_query_hits_columns
+   sort -u -k 1 Pantherby97Uniprotaccession.tsv > sorted_Panther97byUniprotaccession
+   join -1 1 -2 2 sorted_Panther97byUniprotaccession sorted_query_hits_columns > hit_panther_query.tsv
+   sed -i 's/ /\t/g' hit_panther_query.tsv
+   
+9) Creating input files to create shells for the hmmr searches:\\
+  * Creating a master shells for the search of panther hmmrs:
+   Make a security copy of sorted_Panther97byUniprotaccession:
+   cp sorted_Panther97byUniprotaccession sorted_Panther97byUniprotaccession_copy
+   
+Create a list of predicted proteomes:
+   ls -1 *.aa.fasta| sort > Prot_Inlist
+   for f in sorted_Panther97byUniprotaccession; do for x in `cat Prot_Inlist`; do sed -i "s/$/\t$x/g" $f; done; done
+   
+if you head -2 in sorted_Panther97byUniprotaccession after the command line above, this is how it should look like:
+   A5YKK6	PTHR13162_SF8	Carp_sept19.aa.fasta	Cfrisia.masked.aa.fasta	GinA_50803.aa.fasta	GinB_50581.aa.fasta	Gmuris.aa.fasta	Kipferlia.aa.fasta	Monoc.aa.fasta	SSAL.aa.fasta	Trepo.aa.fasta	Trich.aa.fasta
+   A8BCK6	PTHR22891_SF0	Carp_sept19.aa.fasta	Cfrisia.masked.aa.fasta	GinA_50803.aa.fasta	GinB_50581.aa.fasta	Gmuris.aa.fasta	Kipferlia.aa.fasta	Monoc.aa.fasta	SSAL.aa.fasta	Trepo.aa.fasta	Trich.aa.fasta
+
+
+
+**Step 3:** Creating shells and running a HMMR search by **PANTHER SUBFAMILY**\\
+1) You are ready to create the master shell for the hmmr search:
+   source activate python36-generic
+   python ShellMaker2.py sorted_Panther97byUniprotaccession hmmrsearch 1 1
+   source deactivate
+   where hmmrsearch is the task for which the shell be created, 1 is the number of threads and 1 specifies a narrow search.
+   
+To double check that the number of lines coincide with number of queries * number of proteomes (97 * 10):
+   wc -l Panther.HmmrSearch.sh1
+   remember that the shell has 6 lines before the command lines for HMM search.
+   NOTE: Do **NOT** use more than **1** thread when using hmmr in this protocol, other wise it'll be a waste of resources as the won't we allocated.
+
+   The script will produce a file called ‘Panther.HmmrSearch1.sh’ that contains all the command lines required to search the 97 queries/panther hmmr in all of the proteomes you specified.\\
+2) Qsub the Shell. Please avoid lower ram nodes.
+   qsub Panther.HmmrSearch.sh1
+   NOTE: The search will produce one OUT file by query by predicted proteome (1 x 97 x 10= 970 tsv, however, keep in mind that different queries may hit the same panther super and subfamily, so this number could be smaller). \\
+   
+
+**Step 4:** Parsing HMM outputs and creating inputs for a second HMM search\\
+Parsing the HMM outputs
+   source activate python36-generic
+   python Tsv_parser.py Panther.HmmrSearch.sh1 5 1
+   source deactivate
+   where 5 corresponds to the maximum of candidates to keep. The value can increase or decrease depending on what is needed. the number 1 refers to the search by Subfamily.
+   
+   The program will check for failed searches and empty outputs, and create 3 outputs:
+   1) A large file called 'BestHMM_Candidates_1.tsv' with up to 5 candidates by each query from each predicted proteome
+   2) A Input file called 'Input4Step2' to run a broader query by panther subfamily
+   3) A file called 'Missingfrom_Step_1' that corresponds to searches that couldn't be carried out by different reasons.
+
+   
+**Step 5:**  Creating shells and running a HMMR search
+
+1) You are ready to create the master shell for the hmmr search by **PANTHER SUPERFAMILY**:
+   python ShellMaker2.py Input4Step2 hmmrsearch 1 2
+   where hmmrsearch is the task for which the shell be created, 1 is the number of threads and 2 specifies a broad search
+   NOTE: Do **NOT** use more than **1** thread when using hmmr in this protocol, other wise it'll be a waste of resources as the won't we allocated.
+
+The script will produce a file called ‘Panther.HmmrSearch.sh2’ that contains all the command lines required to search the queries that did not have hits during the search carried out in the step 3.
+2) Qsub the Shell. please avoid lower ram nodes.
+   qsub Panther.HmmrSearch.sh2
+ 
+**Step 6:** Parsing HMM outpus and creating inputs for a second HMM search
+Parsing the HMM outputs
+   source activate python36-generic
+   python Tsv_parser.py Panther.HmmrSearch.sh2 10 2
+   source deactivate
+   where 10 corresponds to the maximum of candidates to keep and 2 means that the search was by super family. The value to keep of candidates can increase or decrease depending on what is needed.
+   The program will:
+   1)  Create a file called 'BestHMM_Candidates_2.tsv' with up to 10 candidates by each query from each proteome and merge it with 'BestHMM_Candidates_1.tsv' into a new file called 'BestHMM_Candidates_All.tsv'
+   2) Create a file containing all the information from candidates above the threshold.
+   3) Create a Final summary file with all queries that were not found ('NotFound_inproteomes')
+   4) Retrieve the sequences mentioned in 'BestHMM_Candidates_All.tsv' from each predicted proteome by Panther super-family
+   5) Retrieve the Panther superfamilies of interest and will create a merged fasta file ('PTHR*.REC.fasta') that includes the panther sequences and the sequences retrieved in (4)
+   6) Create the Shells for alignment, trimming and tree reconstruction. 
+   7) Create an input file (Input4ETE) to be later applied with the ETE_standAlone1.4.py script
+   
+**Step 6:** Start the tree search by submitting your jobs:
+   ls -1 *Reconstruction.sh > list_of_shells
+   for i in `cat list_of_shells`; do qsub $i; done
+   
+**Step 8:** Map protein domain architecture to each tree and build a pdf file by panther super-family
+    1) Create an input file separated by tabs containing a list records by line following this format: fastafile treefile
+    source activate python27-generic
+    xvfb-run -a python ETE_standAlone1.4.py Input4ETE
+    source deactivate
+**Step 9:** Creating a tabulated file to keep track of the findings. 
+   NOTE: you will need a metadata file. it may consist of accession numbers and a fasta header. please see the format of the metadata provided for this example 'RNAreduced.METADATA'
+   source activate python36-generic
+   pyton PrepMetatable.py sorted_Panther97byUniprotaccession query_hits_column BestHMM_Candidates_All.tsv RNAreduced.METADATA 
+   source deactivate
+
+**DON'T FORGET to Check how many searches were not done due to errors:** \\
+
+  grep 'Error:' Panther.HmmrSearch.sh2.e* |sort -u \\
+  Error: File existence/permissions problem in trying to open HMM file /db1/extra-data-sets/panther/PANTHER13.1/books/PTHR44316/hmmer.hmm.
+
+**Step 10:** Move the pdf files and 'MAIN_TABLE.txt' to your desktop for manual tree inspection and orthology assignment.
+  
+
+

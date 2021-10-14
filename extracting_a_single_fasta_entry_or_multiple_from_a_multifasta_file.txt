@@ -1,0 +1,67 @@
+How to extract a single fasta entry or multiple fasta entries from a multifasta file
+
+You have a multifasta file with 200 individual fasta files but you only want one of them. How do you extract it?
+
+DO NOT open the file in a text editor and simply cut and paste the one you want. Unless you are very careful this approach can introduce hidden and unwanted characters that will cause programs expecting plain unix type text files to fail.
+
+A better way is to use makeblastdb and blastdbcmd
+
+makeblastdb -in name_of_multifasta_file -dbtype nucl -parse_seqids (for nucleotide files)
+
+makeblastdb -in name_of_multifasta_file -dbtype prot -parse_seqids (for protein files)
+
+identify the name of the entry you want. this will be the text string right after the > and before a space in the header For example, in the header “>m.260160 g.260160 ORF g.260160” the name is m.260160
+
+blastdbcmd -db name_of_multifasta_file -entry name_of_entry_you_want -out name_of_single_entry
+
+Of course there are many ways to extract a single fasta file from a multiple fasta file. What if you want to extract multiple entries from a fasta database?
+
+You could use a single line perl script
+
+perl -ne 'if(/^>(\S+)/){$c=grep{/^$1$/}qw(TRINITY_DN1246_c0_g1_i1 TRINITY_DN1246_c0_g1_i8)}print if $c' Trinity_sortedsize > tempfile
+
+where Trinity_sortedsize is the name of the multifasta file
+
+TRINITY_DN1246_c0_g1_i1 is the name of the first entry to get
+
+TRINITY_DN1246_c0_g1_i8 is the name of the second entry to get
+
+If you have lots of entries, to get them it is cumbersome to put all the names on a single line. Better to put them in a file called something appropriate like filestoget with one entry name per line like this
+
+TRINITY_DN7501_c0_g1_i2
+
+TRINITY_DN7173_c0_g1_i9
+
+Then
+
+perl -ne 'if(/^>(\S+)/){$c=$i{$1}}$c?print:chomp;$i{$_}=1 if @ARGV' filestoget Trinity_sortedsize > myextractedfiles
+
+If you are on a system like perun you could use seqtk
+
+seqtk subseq Trinity_sortedsize filestoget > myextractedfiles
+
+where Trinity_sortedsize is the name of the multifasta file
+
+filestoget is the name of a plain text file that contains entry names, one per line
+
+myextractedfiles is the name of the file containing just the entries you want
+
+When you look at myextractedfiles you will notice that the entries are no longer nicely formatted but instead the sequence is all on one line. Normally this doesn't matter.
+
+If you are on a system with EMBOSS installed you could use seqret
+
+To get just one entry
+
+seqret -sequence Trinity_sortedsize:TRINITY_DN7501_c0_g1_i2 -outseq myfileofinterest -auto
+
+where Trinity_sortedsize:TRINITY_DN7501_c0_g1_i2 is the name of the database followed by :followed by the name of the entry you want
+
+To get multiple entries all at once you need to put the names in a file called something appropriate like filestoget with one entry name per line like this
+
+Trinity_sortedsize:TRINITY_DN7501_c0_g1_i2
+
+Trinity_sortedsize:TRINITY_DN7173_c0_g1_i9
+
+Then
+
+seqret @filestoget -outseq myfiles -auto

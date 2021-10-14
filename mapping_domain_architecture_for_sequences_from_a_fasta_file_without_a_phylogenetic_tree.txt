@@ -1,0 +1,32 @@
+If you are curious to know if certain domains are present or not in a proteome of your interest:
+
+The following script will run a pfam search and re-create the domain architecture when it finds a domain you have specified on the list of domains.
+
+copy to you directory:
+
+scp /home/dsalas/Shared/Architec/* .
+
+if you are going to use the script for first time, you need to execute this command line in your home directory in Perun (if you already did this, then you shouldn't do it again):
+ 
+pip install PyPDF2 --user
+
+
+The files contain the script plus test files (example):
+1- interactive script to lauch a search : iShell.sh
+
+2- a manually created list of domains of your interest: list_example. 
+   Those domains can be gattered by ID pfam (http://pfam.xfam.org/search/keyword?query=AAA&submit=Submit) 
+ 
+{{:capture.jpg?400|}}
+
+3- a proteome: mock.fasta. 
+
+
+
+RUNNING YOUR DATA:
+
+1- You need to bring in your proteome, and to provide your own list of domains.  Customize the iShell accordingly to the names you used for your proteome and your list.
+
+2- to run the script:
+   chmod 777 iShell.sh
+   ./iShell.sh

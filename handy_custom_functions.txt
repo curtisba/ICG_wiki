@@ -1,0 +1,145 @@
+You might find that in your daily computer work, there are some commands that are long and you execute quite often. Sometimes it may also be a series of commands that you execute in a row that you do quite often. It may be worth it to write a custom function that wraps these lines of code into a short, so that you do not have to type all of these commands anymore.
+
+We have already discussed one such function in a previous section:
+<code>
+# easier viewing of tab separated files
+function coltab {
+    column -t -s $'\t' $1 | less -S
+}
+</code>
+
+I will discuss here some more custom functions that I found are very useful in my daily workflow. To add these functions to your system, simply add them to your ''.bashrc''
+
+===Selecting or removing sequences from a FASTA file===
+
+<code>
+# fish out a sequence from a fasta file
+function grabseq {
+    fasta=$3
+    to_grab=$2
+    case "$1" in
+        -s) seqtk subseq $fasta <(grep    "$to_grab" $fasta | sed -e 's/>//' -e 's/ .*//');;
+        -l) seqtk subseq $fasta <(grep -f "$to_grab" $fasta | sed -e 's/>//' -e 's/ .*//');;
+        *) echo -e "grabseq -s <seqname> <fasta> to grab a single sequence\ngrab_seq -l <seqlist> <fasta> to grab a list of sequences"
+    esac
+}
+</code>
+
+This is essentially a wrapper for the [[https://github.com/lh3/seqtk|seqtk]] tool.
+
+<code>
+# select any sequence that has <pattern> in the header
+# useful if you want to find a single sequence
+$ grabseq -s <pattern> <FASTA>
+
+# select a particular set of sequences that have <pattern> in their header and are in the <pattern_list> file
+# useful if you want to multiple sequences
+$ grabseq -l <pattern_list> <FASTA>
+</code>
+
+The next function does the opposite of grabseq. It will remove particular sequences from a FASTA file.
+
+<code>
+# remove a particular entry from a fasta file
+function rmseq {
+    fasta=$3
+    to_rmv=$2
+    case "$1" in
+        -s) seqtk subseq $fasta <( grep ">" $fasta | grep -E -v "$to_rmv" | sed "s/>//" );;
+        -l) seqtk subseq $fasta <( grep ">" $fasta | grep -v -f "$to_rmv" | sed "s/>//" );;
+        *) echo -e "rmseq -s <seqname> <fasta> to remove a single sequence\nremove_seq -l <seqlist> <fasta> to remove a list of sequences"
+    esac
+}
+</code>
+
+<code>
+# remove a particular sequence that has <pattern> in the header
+$ rmseq -s <pattern> <FASTA>
+
+# remove a particular set of sequences that have <pattern> in the header and are in the <pattern_list> file
+$ rmseq -l <pattern_list> <FASTA>
+</code>
+
+NOTE: Dayana pointed out to me another tool similar to seqtk called [[https://github.com/shenwei356/seqkit|SeqKit]] which has a lot more functionality, essentially making the above custom functions obsolete.
+
+Selecting sequences:
+<code>
+# select a sequence with the exact <SeqID> as fasta header ID
+$ seqkit grep -p <SeqID> <FASTA>
+
+# select a sequence of which the fasta header ID matches a <regex_pattern>
+$ seqkit grep -rp <regex_pattern> <FASTA>
+
+# select a set of sequences of which the exact IDs are listed in <SeqID.exact.list>
+$ seqkit grep -f <SeqID.exact.list> <FASTA>
+
+# select a set of sequences of which the IDs match regex patterns listed in <SeqID.regex.list>
+$ seqkit grep -rf <SeqID.regex.list> <FASTA>
+</code>
+
+Removing sequences
+<code>
+# remove a sequence with the exact <SeqID> as fasta header ID
+$ seqkit grep -vp <SeqID> <FASTA>
+
+# remove a sequence of which the fasta header ID matches a <regex_pattern>
+$ seqkit grep -vrp <regex_pattern> <FASTA>
+
+# remove a set of sequences of which the exact IDs are listed in <SeqID.exact.list>
+$ seqkit grep -vf <SeqID.exact.list> <FASTA>
+
+# remove a set of sequences of which the IDs match regex patterns listed in <SeqID.regex.list>
+$ seqkit grep -vrf <SeqID.regex.list> <FASTA>
+</code>
+
+A FASTA header consists of two parts, the header ID and the header DESCRIPTION. The ID is essentially anything between ''>'' and the first space, and the DESCRIPTION is anything after that.
+
+===Reformatting FASTA files downloaded from NCBI===
+
+For most of my analyses, the header format of NCBI FASTA files is very annoying. This function will convert the annoying format into ''>SpeciesName_i_AccessionNumber''
+
+<code>
+# format NCBI headers to something readable
+function reformat_ncbi_headers {
+    newfile=${1%.fasta}.hdfmt.fasta
+    cp $1 $newfile
+    sed -i -r -e '/^>/ s/ >.*//' -e 's/>([^ ]*).*\[(.*)\]/>\2_i_\1/' -e 's/ /_/g' $newfile
+    sed -i -r -e '/^>/ s/gi.*ref\|(.*)\|/\1/' $newfile
+}
+</code>
+
+===Replacing work names with final names for publication===
+
+In my experience I do my analyses with new genomes / transcriptomes etc I work with 'worknames'. For example 'bin125' or 'L4', or 'BBO'. That is fine while you do your analyses, but in the end when you want to publish your work you'll want to have proper names. This function takes a mapping file that contains the short / worknames in the first column and the final names in the second column, and replaces the worknames with the final names in tree files, FASTA files, you name it.
+
+<code>
+# replace taxanames in trees, fasta, etc
+function replace_names {
+    input=$1
+    mappingfile=$2
+    cp $input $input.nms
+    cat $mappingfile | while read SEARCH REPLACE; do
+        sed -i -r "s/$SEARCH/$REPLACE/" $1.nms
+    done
+}
+</code>
+
+===Some other functions===
+
+<code>
+# fasta to phylip
+# depends on trimal
+function fa2phy {
+    trimal -in $1 -out ${1%.*}.phylip -phylip
+}
+
+# reverse complement function
+function revcomp {
+    tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev
+}
+
+# sum up all numbers in a list
+function total {
+    tr '\n' '+' $1 | sed "s/\+$/\n/" | bc
+}
+</code>

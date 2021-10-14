@@ -1,0 +1,266 @@
+====== Multi-gene phylogeny tree using Matt Brown’s Bordor dataset and pipeline ======
+
+ 
+Documentation by Kate Glennon, Sarah Shah, Shelby Williams, and Tommy Harding.
+ 
+The **Bordor** dataset is a set of 351 housekeeping genes that are well-conserved across all eukaryotes. This pipeline uses the gene sequences from //Arabidopsis thaliana// as queries to fish for homologues during the BLAST step. Credit goes to Matt Brown & co.: [[https://doi.org/10.1093/gbe/evy014]], [[https://doi.org/10.1093/molbev/msx162]]
+
+All the original transcriptom/proteome files that are in the Bordor alignment is in **/scratch2/mbrown/PhylogenomicDatabases**
+ 
+**The Pipeline Overview**
+
+-       First it builds a phylogeny for each individual gene (multiple single gene phylogenies), and compares each of them to the expected phylogeny.
+
+-       The pipeline will flag individual trees that do not match the consensus tree, so that you can look into why they might be different (could be contamination, paralogs, LGT).
+
+**Single gene phylogeny using protein coding genes**
+
+1. Identify the sequence of the gene of interest in many organisms/species
+
+-       **BLAST**: “Basic Local Alignment Tool”; compares a query sequence to a database to identify similar sequences for alignment.
+
+2.     Align these sequences
+
+-       **MAFFT**: takes all of the sequences and aligns them.
+
+-       Once aligned, each site in the alignment contains amino acids that are considered homologous (i.e. they share a common ancestor), allowing to compare the amino acids present at a specific site to each other and to infer an evolutionary scenario (to determine what sequences diverged from each other more recently).
+
+3.     Trimming
+
+-       **BMGE**: removes the sites that are ambiguous in the alignment from MAFFT.
+
+-       Removes all sites in the alignment that are ambiguously aligned.
+
+4.     Build the phylogeny
+
+-       **RAXML, IQTREE**: using maximum likelihood analysis.
+
+Maximum likelihood: finds the tree that maximizes the probability of the data, given the tree.
+
+Bootstrap analysis provides statistical support for the obtained tree topology (see below).
+
+-       **Mr. Bayes/Phylobayes**: using Bayesian analysis.
+
+Bayesian analysis: finds the tree based on posterior probability.
+ 
+5.     Inspection of each tree (manually)
+
+-       It is important to open each file and investigate whether the organism is clustered somewhere expected in the tree.
+
+6.     Remove any problematic sequences (manually)
+
+-       Take out any sequences that produce phylogenies that do not make phylogenetic sense (i.e. taxon has an unexpected placement on the tree) or that generate extra-long branches.
+
+ Multi-gene phylogeny using protein coding genes
+
+7.     Concatenate the alignments 
+
+-       Concatenate all of the alignments for all of the genes of interest, so that rather than having multiple short sequences with little information, you have a long alignment with lots of information.
+
+8.     Repeat step 3 and 4 to build a multigene phylogeny
+ 
+Bootstrapping: A statistical method to determine how much phylogenetic signal a given alignment carries using random sampling to determine confidence intervals or sampling error. Positions in the alignment are randomly removed, followed by phylogenetic analysis of the new (smaller) alignment. This is repeated multiple times, commonly 100 or 1000 times and the results are compiled on the best maximum-likelihood tree. As a result, each bipartition in the tree has a support value (a bootstrap value) that reflects how many times a group of sequences clustered together at the exclusion of the other sequences when using slightly different alignments to construct the tree. A branch with high support means that the corresponding grouping was often (or always when bootstrap = 100) recovered. 
+
+{{:bootstrap.png?400|}}
+
+(Roger, AJ., lecture slide for BIOC4010)
+ 
+
+----
+
+ 
+Software involved in this pipeline: **BLAST** ([[https://blast.ncbi.nlm.nih.gov/Blast.cgi]]), **OrthoMCL** ([[http://orthomcl.org/orthomcl/]]), **MAFFT** ([[http://mafft.cbrc.jp/alignment/software/]]), **BMGE** ([[https://bmcevolbiol.biomedcentral.com/articles/10.1186/1471-2148-10-210]]), **IQ-TREE** ([[http://www.iqtree.org/]]), FastTree ([[http://www.microbesonline.org/fasttree/]]), **RAxML** ([[https://sco.h-its.org/exelixis/web/software/raxml/index.html]]) 
+ 
+**Data type for input**: transcriptome (in nucleotides) or amino acid sequences (for example, translated ORF data).
+ 
+**System requirements**:
+This pipeline is customized for perun. Some of the codes here are hard-coded to individual users’ folders as well, so make sure you have access to them (as of June 14 2017, these folders are: /scratch2/yana/ and /scratch2/mbrown). The only computationally heavy parts of the pipeline are the tree-making steps, and these can be mitigated by running the cpu_limit.sh as described below, or submitting the tree-making scripts to nodes of 144G or above. 
+ 
+**Code availability:**
+As of June 14 2017, you can copy the following folder as your “START*”:
+/scratch2/mbrown/START.02-09-2017.SHARE.tgz This has more stramenopiles than other versions.
+Additional scripts listed in the following instructions can be copied from:
+/home/sarahshah/AdditionalScripts/Multigene_Phylogeny
+
+
+----
+
+
+**Command line usage and scripts for Matt Brown’s multi-gene phylogeny pipeline**
+ 
+This pipeline builds on others’ databases, so if you want the most updated, most diverse set of genes and species, copy the “END*” folder from someone you know who just finished running the pipeline. Database directories can change too, so please refer to the last person who used it. For example, when Matt Brown first came up with this pipeline, it linked to the OrthoMCL database on Scinet (University of Toronto), but now it is linked to Yana’s directory. 
+The following are the instructions for running the pipeline. They are adapted from Matt Brown’s instructions in AddPipeline3.0.py. The function of each shell script will be explained in the next section. For now, please use AddPipeline3.0a.py as this version has the OrthoMCL database linked to Yana’s directory.
+ 
+Step 1: Copy an “END*” folder into your directory. Rename it as a “START*” folder with the current date. Copy Bordor.sh, MakeShell.py, cpu_limit.sh, and submit_cpulimit2.pl into this folder as well.
+ 
+Step 2: Copy your transcriptome fasta file or your translated protein fasta file (such as through using TransDecoder) to your “START*” folder. Rename this file according to the 8-letter-format plus the .fas extension as described in the AddPipeline.py script (referred to below as the short name). For example, Genus species becomes Genuspec.fas (i.e. 4 first letters of genus + 4 first letters of species).
+ 
+Step 3: If you need to add sequences from only one taxon, do the following, otherwise see NOTE at the end of step 3. Edit Bordor.sh and change the input file name to yours, e.g. :
+<code>
+#!/bin/bash
+#$ -S /bin/sh
+. /etc/profile
+#$ -o matt_pipeline.info.txt
+#$ -cwd
+#$ -pe threaded 8
+ 
+python AddPipeline3.0a.py <short name> <complete species name with only one “_” in between the genus and species: Genus_species**> 1 <AA or NUC> Bordor.351.refdat.txt ./ END.YY-MM-DD yes
+</code>
+The number “1” refers to the standard genetic code. Use “NUC” if your fasta file contains nucleotide sequences, or change it to “AA” for protein sequences. Say “yes” for the last flag at the end of the line if you want your alignments to be trimmed by bmge. Edit the date attached to “END*” to match today’s date. Make sure the AddPipeline3.X.py in your “START*” folder matches the one in this shell script. As of now, AddPipeline3.0a.py is the latest version. **Make sure your "short name" and "long name" are correct, i.e. 8 characters for the former, and the latter must have one "_"**. Then qsub Bordor.sh. Ensure that you are using a node with enough CPU's available, otherwise your Bordor.sh error file will show that the threadcount is out of range.
+ 
+NOTE: If you need to add sequences from several taxa: in step 1, instead of renaming the “END*” folder “START*”, rename it with the short name of the first organism you want to add; and in step 2, copy original fasta files for all the organisms of interest (renamed with the organism short names as instructed in step 2 above) upstream of the folder created in step 1. Save the Bordor.sh script at the same location and edit it as follows (for 3 organisms as example):
+<code>
+#!/bin/bash
+#$ -S /bin/sh
+. /etc/profile
+#$ -o matt_pipeline.info.txt
+#$ -cwd
+#$ -pe threaded 8
+ 
+cp Genuspec1.fas Genuspec1/
+cd Genuspec1/
+python AddPipeline3.0a.py Genuspec1 Genus_species1 1 AA Bordor.351.refdat.txt ./ Genuspec2 no
+ 
+mkdir ../Genuspec2
+cd ../Genuspec2/
+python AddPipeline3.0a.py Genuspec2 Genus_species2 1 AA Bordor.351.refdat.txt ./ Genuspec3 no
+ 
+mkdir ../Genuspec3
+cd ../Genuspec3/
+python AddPipeline3.0a.py Genuspec3 Genus_species3 1 AA Bordor.351.refdat.txt ./ END.YY-MM-DD yes
+</code>
+This will sequentially add the appropriate sequences for all the organisms of interest to the Bordor dataset. Trimming will not occur until the last taxon is added.
+
+NOTE2: If you have alignment files from someone else, and you want to add your own transcriptomes to them, move the alignment files in the folder "old_aln" in your START folder.
+
+Step 4: If everything went as expected, there will be a folder named “bmge_trimmed_old” in the “END*” folder. Download a bunch of *.faa (aligned non-trimmed sequences) and *.bmge.fas (trimmed aligned sequences) files to your computer and examine them with a sequence viewer such as AliView. The last line(s) is the sequence from your transcriptome/protein data that was aligned to the other sequences of that particular gene. Make sure they look aligned; for instance, if all other sequences have a “GGG” in a specific location then you should expect your sequence to have the same. The .bmge.fas files are .faa files in which the badly-aligned positions were trimmed away. 
+ 
+Step 5: Copy all the bmge.fas files to a new folder (eg. mkdir Single_gene_trees_Genuspec) together with the script MakeShell.py (which creates a shell script for each *.bmge.fas file to build a single-gene phylogenetic tree). As of now, FastTree, RAxML, and IQTree options are available. You can edit MakeShell.py according to your needs by changing the models, number of CPUs to use, etc. View the “help” of each program (FastTree -help, raxmlHPC -help, iqtree-omp -h) to help you choose.
+ 
+Step 6: Run the MakeShell.py by typing in: 
+<code>
+python MakeShell.py <iqtree, RAxML, or FastTree>
+</code>
+You should immediately see new .sh files made for each gene.
+ 
+Step 7: This step until Step 9 are for submitting all those tree shell scripts in an efficient way. Make a simple file containing a list of all the .sh just created by typing: 
+<code>
+ls iq*sh > list_scripts_iqtree (or Fast*sh or RAxML*sh to the name of another tree program)
+</code>
+Step 8: Create a text file (called “max_cpu.txt”) that contain the total number CPUs you would like to use when building your phylogenies and another that specifies the number of seconds to wait between submitting each shell script called “sleep_time.txt”. You can do this by:
+<code>
+echo “40” > max_cpu.txt   #40 is the maximum CPUs you’d like to use
+echo “2” > sleep_time.txt  #The waiting time between submitting each job is 2 seconds
+</code> 
+The above files can be edited in real-time; increase the CPUs and sleep time if jobs are slow in being submitted. A good option for FastTree is 40 CPUs and 2 seconds of sleep time. For IQTree, 40 CPUs and 60 seconds of sleep time seem to work. You do not need to cancel your jobs after editing these files.
+ 
+Step 9: Edit the cpu_limit.sh. Change the “list” name to the name of the list you made in Step 7. Change the username to yours. Qsub this script. Type qstat to see how your jobs are being submitted. Check the error files *.sh.e* and the output files *.sh.o* to make sure no errors occurred. 
+ 
+It may take several minutes to hours depending on what type of tree programs you used and the substitution models you chose. The job finishes when you no longer see cpu_limit.sh and its associated tree-making scripts in the job queue. The trees will be submitted to different nodes based on availability.
+ 
+Now you may end up with over 300 single-gene tree files. The output tree files of FastTree will have the extension .tre, for RAxML it will have the words “bestTree” in the file names, and for IQTree take the .treefile. You must visually check each one to make sure that the newly-added sequences are clustering in clades that make sense, or that they don’t form extremely long branches. Note down the species and gene names of those problematic ones. Download all the tree files onto your computer and view them using a tree-viewing program such as FigTree. Compare them against Bordor.Taxa.txt and Bordor.Color.ConTree.tre. Some alignments may not contain your species at all, but keep them, as they will help in determining the position of other species in the final tree.
+ 
+Step 10: Download the .fas (unaligned files) from the bmge_trimmed folder. Remove the offending sequences using AliView. Upload these cleaned .fas files back into a new folder. 
+ 
+Step 11: Copy taxon_deletion.py from the main START folder into the current directory. 
+ 
+Step 12: Make a list file of all the taxa that you’d like to KEEP. Taxa need to be removed if: 
+i)  you know these taxa are fast-evolving and will thus lead to long branches in your multi-gene phylogeny,
+ii) the data related to these taxa were generated by someone else and are not published yet,       iii) taxa irrelevant to your study. You might want to keep a few organisms as outgroups. 
+For example, to keep all the taxa that are publicly available, do:
+<code>
+grep “YES” Bordor.Taxa.txt > YESlist
+awk ‘{print $1}’ YESlist 
+</code>
+Copy the first column that was printed out by the above command and paste it into a file, let’s call this “yourlist”.
+ 
+Step 13: Copy mvtaxatrimmedfas.py, sepalignmask.py, and BMGE.jar from the main START folder into this new folder. Do:
+<code>
+python taxon_deletion.py yourlist
+</code>
+Note, this script only recognizes a list of the short names in a column format. This will make *taxatrimmed.fas files. Move all of them into a new folder. 
+ 
+Then do:
+<code>
+python mvtaxatrimmedfas.py 
+</code>
+This will rename the taxatrimmed.fas files to .fas files. 
+ 
+Next do:
+<code>
+python sepalignmask.py numberofthreads
+</code>
+This will re-align (using MAFFT) and trim (using BMGE) the sequences in these files, producing .faa and .bmge files.
+ 
+You can also make shell scripts for all the .py scripts above and qsub them, especially for ones that take some time, such as the sepalignmask.py.
+ 
+Step 14: Move all the .bmge.fas files to a new folder. Copy alvert_septable.py and seqtools.py into this folder from the main START folder. Do:
+<code>
+python alvert_septable.py -c bmge.fas outputnamehere.dat
+</code>
+This will generate a gene table text and a log file along with a phylogenomic supermatrix outputnamehere.dat. Rename the log file before running IQTree as IQTree also generates an output with a log extension with a similar name. The log file lists the number of genes missing from each taxon.
+ 
+Step 15: Run IQTree on the outputnamehere.dat file. Make sure to rename your outputnamehere.dat.log file before doing this, as the shell will create a file with the same name. You may need to qsub this to a 256G or a higher RAM node, as it needs a lot of memory to be able to run.
+Here is an example of a shell script for this:
+<code>
+#!/bin/sh
+#$ -S /bin/sh
+. /etc/profile
+#$ -cwd
+#$
+#$ -pe threaded 4
+
+iqtree-omp -bb 1000 -wbt -m LG4X -s outputnamehere.dat -nt 4
+</code>
+Step 16: Play around with your final tree! Reroot the tree - the common practice is to choose a point between the amorphea and the rest of the clades. Rename the short species names to their long format (Tommy wrote a script called RenameTree.py. It is located in /home/sarahshah/AdditionalScripts/Multigene_Phylogeny), export the tree as a PDF and then edit it using Adobe Illustrator.
+
+----
+
+Descriptions of scripts used in this pipeline:
+ 
+Bordor.sh
+
+Author: Yana Eglit
+
+This submits the AddPipeline.py.
+ 
+AddPipeline.py 
+Author: Matt Brown
+This is the main “pipe” for this pipeline. The following functions are executed in order:
+  - Creates a database for your input. Named “dbGenuspec”. 
+  - Performs tblastn (for nucleotide input) or blastp (for amino acids) by running the script blastmonkey.py.
+  - Runs OrthoMCL blast with runorthomclblast.py. See http://orthomcl.org/orthomcl/about.do for more details on their algorithm.
+  - Checks the results of OrthoMCL blast and throw problematic ones into the Problem folder and the ones which passed this check into the clean_to_add folder. “Problematic” means they hit a prokaryotic sequence. 
+  - Creates a DONE_Dataset folder which contains all of your clean genes and genes from previous times the pipeline was run.
+  - Creates the END folder upstream. This can be used as your next START folder, or you can pass it on to someone else.
+  - Using BMGE (https://bmcevolbiol.biomedcentral.com/articles/10.1186/1471-2148-10-210) , the .fas files are aligned into .faa, and then the badly-aligned regions of the .faa files are trimmed away to make the final output files that have the extension .bmge.fas.
+ 
+MakeShell.py
+
+Author: Tommy Harding
+
+Makes shell scripts for tree-making.
+ 
+For iqtree and RAxML options, you can change the number of threads, substitution model, and bootstrap options in this script. 
+ 
+Tips from Andrew:
+RAxML and IQTree are similar in terms of speed. The rapid bootstrap values of RAxML are more accurate than the ultrafast bootstraps (UFBOOT) of IQTree. IQTree allows a wider range of protein models to be used.  For single gene trees, I think you could use LG+C10+F+G as the model (only available in IQTree, check out http://www.iqtree.org/doc/Substitution-Models). This model allows for heterogeneity in the amino acid ‘profile’ at different sites — it has 11 different profiles it uses. If there are a lot of species in your alignment, then use LG4X. I would check to see how long an individual gene tree takes to run with the models (so before running cpu_limit.sh, qsub one of the iqtree_*.sh) and then you’ll know how long it will take roughly for the 350 genes in Matt Brown’s Bordor dataset. 
+ 
+cpu_limit.sh
+
+Author: Tommy Harding & Gordon Lax
+
+Uses Laura’s Perl script below to control how each tree shell scripts from a list of scripts are submitted to perun.
+ 
+submit_cpulimit2.pl
+
+Author: Laura Eme
+
+A Perl script to control the number of CPUs and waiting time for shell scripts to be submitted to perun.
+
+
+----
+
+**Adding more hits to the pipeline:**
+
+This pipeline only takes in the best hit from the local blastp step against the //A. thaliana// genes. If you're interested in looking at the positions of the other hits (the blastp step lists out 10 hits each gene), I have an edited version of the pipeline in /home/sarahshah/AdditionalScripts/Multigene_Phylogeny. The new scripts are: AddPipeline3.1ss.py, addhits3.1ss.py (currently it takes up to 5 hits, you can go in and change that), and cleanhits.sh.

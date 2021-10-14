@@ -1,0 +1,21 @@
+**TransDecoder for Transcriptome Data**
+ 
+Documentation by Kate Glennon, Sarah Shah, and Shelby Williams.
+ 
+The TransDecoder is used to get the amino acids from a transcriptome. It will predict the coding regions.
+ 
+1. To run, you will need to make a copy of your transcriptome fasta file in a new folder. Use the command line:
+<code>
+/opt/perun/TransDecoder-3.0.1/TransDecoder.LongOrfs -t YourTranscriptome.fasta
+</code>
+2. Once this has finished, you will run the TransDecoder Prediction to get the final coding region predictions. Use the following command line, with the same transcriptome file:
+<code>
+/opt/perun/TransDecoder-3.0.1/TransDecoder.Predict -t YourTranscriptome.fasta
+</code>
+This will result in your final predictions, and the output files that you want to use are the transcoder.pep files. 
+
+You can rename the headers or remove certain characters you do not want (such as *) by:
+<code>
+awk '/^>/{print ">" ++i; next}{print}' < inputfile.fasta > outputfile.fasta #This renames the headers to >numbers
+sed 's/*/ /g' inputfilename > outputfilename                                #This removes the asterisk characters.
+</code>

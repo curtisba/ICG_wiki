@@ -1,0 +1,98 @@
+Updated by Dandan Zhao and D. Salas-Leiva (2020-12-15)
+
+**1. Quality control: FastQC**\\
+FastQC reads fastq file and produces a quality control report consisting of the different modules that are very useful for cleaning the reads:\\
+• Basic Statistics: Total Sequences, Sequences flagged as poor quality, Sequence length,%GC\\
+• Per base sequence quality \\
+• Per sequence quality scores\\
+• Per base sequence content\\
+• Per sequence GC content\\
+• Per base N content\\
+• Sequence Length Distribution\\
+• Overrepresented sequences\\
+• Adapter Content\\
+
+input can be fastq or bam/sam file, output is a html report and a compressed report file.\\
+
+<code>
+ fastqc [-o output_dir] [-f fastq|bam|sam] seqfile
+or
+ fastqc seqfile1 seqfile2 .. seqfileN
+</code>
+
+**2. Remove adapters: Trimmomatic**\\
+
+The shell script below will trim/clean up Illumina paired reads (for options see http://www.usadellab.org/cms/?page=trimmomatic).\\ 
+If you have your own set of adapters, let's say in the following path (///path/to/userdir/Adapters.fas//), you need to place such information after you have declared the Paired and Unpaired file names <ILLUMINACLIP:/path/to/userdir/Adapters.fas:2:30:10>. If you don't do this (because you don't know which adapters were used for the library), don't worry... you can use the script as it is, since trimmomatic will use its own Illumina provided adapters and search them (All adapters by default will be searched)\\  Do not forget to provide your directories names when __/path/to/userdir/__ appears, or use cd $PWD if the shell is in the same fold containing the input files.\\
+
+//input can be fastq (decompressed or compressed as gz), output will be decompressed by default.\\
+always check if there is a newer update of Trimmomatic available in perun.//
+
+== shell script:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 20
+
+cd $PWD
+R1=/abspath/to/reads.R1.fastq.gz
+R2=/abspath/to/reads.R2.fastq.gz
+basename=my_bug
+# use either your own adapters or the comprehensive adapter list in the path below:
+adap_path=/home/dsalas/anvioWrap/TrueSeq2_NexteraSE-PE.fa
+# trimmomatic version is 0.39 (latest release)
+source activate trimmomatic
+trimmomatic PE -threads 20 -phred33 -trimlog $basename\.log $R1 $R2 $basename\.1.PT.fq $basename\.1.unPT.fq $basename\.2.PT.fq $basename\.2.unPT.fq ILLUMINACLIP:$adap_path:2:30:10 HEADCROP:10 LEADING:10 TRAILING:10 SLIDINGWINDOW:40:25 MINLEN:40
+conda deactivate
+
+</code>
+
+This will perform the following:\\
+• HEADCROP: Cut the specified number (20) of bases from the start of the read.\\
+• LEADING: Remove bases in the start of a read if the quality is below quality 10. (LEADING:10)\\
+• TRAILING: Remove bases in the end of a read if the quality is below quality 10. (TRAILING:10)\\
+• SLIDINGWINDOW: Perform a sliding window trimming, cutting once the average quality within the window falls below a threshold. Scan the read with a 10-base wide sliding window, cutting when the average quality per base drops below 25 (SLIDINGWINDOW:10:25)\\
+• MINLEN: Drop the read if it is below a specified length (below 40) (MINLEN:40).\\
+• -phred33: Quality scores in Phred33 format. [https://en.wikipedia.org/wiki/FASTQ_format]\\
+• ILLUMINACLIP: Remove adapters <ILLUMINACLIP:/path/to/userdir/Adapters.fas:2:30:10> (/path/to/userdir/Adapters.fas, adapter file). \\
+
+
+Parameters listed here are a little strict. You can adjust them based on your demand. To test the quality of the read, use fastqc first to get a quality control report.\\
+
+**3. Remove host reads: bowtie2**\\
+
+Step1. Download host reference genome (https://www.ncbi.nlm.nih.gov/genome/)\\
+
+Step2. Use //bowtie2-build// to build a Bowtie index from a set of DNA sequences. bowtie2-build outputs a set of 6 files with suffixes .1.bt2, .2.bt2, .3.bt2, .4.bt2, .rev.1.bt2, and .rev.2.bt2.\\
+
+== shell script:\\
+<code>
+#!/bin/bash
+#$ -S /bin/sh
+. /etc/profile
+#$ -cwd
+cd $PWD
+/opt/perun/bin/bowtie2-build -f Host_ref_genome.fna Host_ref_genome
+</code>
+
+Step3. Mapping the metagenome to reference genome (host) and write paired-end reads that fail to align to output file by Bowtie 2 (for options see http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml).\\
+
+Input need decompressed fastq files. Output files: 
+SRR1747060.sam (File with SAM alignment infomation )
+SRR1747060_bowtie2.1.fastq
+SRR1747060_bowtie2.2.fastq
+SRR1747060_bowtie2_un.fastq
+
+== shell script:\\
+<code>
+#!/bin/sh
+#$ -S /bin/sh
+. /etc/profile
+#$ -o bowtie2.log
+#$ -cwd
+#$ -pe threaded 10
+bowtie2 --threads 10 -x Host_ref_genome -1 READS_R1_PairNtrim.fq -2 READS_R2_PairNtrim.fq -U READS_R1_unPairNtrim.fq,READS_R2_unPairNtrim.fq -S SRR1747060.sam --un-conc READS_bowtie2.fastq --un READS_bowtie2_un.fastq
+</code>
+   

@@ -1,0 +1,27 @@
+This program will:
+
+1- Align (Mafft)
+
+2- Trim (BMGE or trimal)
+
+3- Run tree searches for mixture models C10 to C60 with IQtree and select based on AIC. PMSF can be also enabled, and will be done on the best tree selected from a full mixture model search.
+
+4- If indicated, it will transform your data into saturation bins (currently only SR4 from Susko and Roger, 2007 is supported)
+
+**Please Read the configuration file for instructions.**
+
+**program :
+**
+scp /home/dsalas/Shared/TreeSearches_DomainArchitecture/TreeSearch_DomainArchitecture.py . 
+
+**configuration file:**
+
+scp /home/dsalas/Shared/TreeSearches_DomainArchitecture/TreeSearch_DomainArchitecture.Config .
+
+
+__test files:__
+
+scp /home/dsalas/Shared/TreeSearches_DomainArchitecture/list_of_fasta_files .
+
+scp /home/dsalas/Shared/TreeSearches_DomainArchitecture/test*fasta .
+

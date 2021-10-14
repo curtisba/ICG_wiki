@@ -1,0 +1,47 @@
+**Parsing the InterProScan results**
+
+InterProScan is a powerful and useful protein identifier explorer.However, the result of it is not easy to handle. For example, the example of it have many columns and duplicated rows. Here, we are going to use script to merge the same gene ID to one lines. So the script is called interproscan_to_one_line.py. Please find the difference before and after using the script on the TAIR 10 data. The Homo_sapiens data is at the bottom of the page.
+
+Before:
+<code>
+AT1G11750.1	e35d0d54d5d209033484e31afc0ff009	271	Coils	Coil	Coil	210	230	-	T	27-09-2021	-	-
+AT1G11750.1	e35d0d54d5d209033484e31afc0ff009	271	Hamap	MF_00444	ATP-dependent Clp protease proteolytic subunit [clpP].	84	270	33.141739	T	27-09-2021	IPR001907	ATP-dependent Clp protease proteolytic subunit	GO:0004176|GO:0004252|GO:0006508	-
+AT1G11750.1	e35d0d54d5d209033484e31afc0ff009	271	CDD	cd07017	S14_ClpP_2	96	264	3.96818E-88	T	27-09-2021	IPR001907	ATP-dependent Clp protease proteolytic subunit	GO:0004176|GO:0004252|GO:0006508	-
+AT1G11750.1	e35d0d54d5d209033484e31afc0ff009	271	ProSitePatterns	PS00382	Endopeptidase Clp histidine active site.	189	202	-	T	27-09-2021	IPR033135	ClpP, histidine active site	-	-
+AT1G11750.1	e35d0d54d5d209033484e31afc0ff009	271	Pfam	PF00574	Clp protease	96	269	3.7E-65	T	27-09-2021	IPR023562	Clp protease proteolytic subunit /Translocation-enhancing protein TepA	-	MetaCyc: PWY-7884
+</code>
+
+After: 
+<code>
+AT1G11750.1	PF00574	Clp protease
+AT5G53350.1	PF10431,PF07724	C-terminal, D2-small domain, of ClpB protein,AAA domain (Cdc48 subfamily)
+AT4G17040.1	PF00574	Clp protease
+AT5G15450.1	PF10431,PF17871,PF02861,PF02861,PF07724,PF00004	C-terminal, D2-small domain, of ClpB protein,AAA lid domain,Clp amino terminal domain, pathogenicity island component,Clp amino terminal domain, pathogenicity island component,AAA domain (Cdc48 subfamily),ATPase family associated with various cellular activities (AAA)
+AT5G51070.1	PF07724,PF10431,PF02861,PF02861,PF00004,PF17871	AAA domain (Cdc48 subfamily),C-terminal, D2-small domain, of ClpB protein,Clp amino terminal domain, pathogenicity island component,Clp amino terminal domain, pathogenicity island component,ATPase family associated with various cellular activities (AAA),AAA lid domain
+</code>
+
+Because we only displayed the one contain "Pfam" protein patterns.User can change the parameters: Pfam to others e.g., CDD, Hamap to filter out the others.
+
+   * Step One: Running the InterProScan with your interested protein fasta files.
+
+<code>
+>/interproscan.sh -i proteins_of_your_genome.fasta -f tsv -dp
+</code>
+
+If you are new to InterProScan, please find detailed usage at the Step #6 in (Zhang et.al 2021)(https://doi.org/10.1016/j.xpro.2021.100619)
+
+   * Step Two: Run the interproscan_to_one_line.py script which can be found via (https://github.com/zx0223winner/TreeTuner/tree/main/input_data/InterProScan_Parser)
+
+<code>
+python3 interproscan_to_one_line.py test_data.tsv out.txt Pfam
+</code>
+
+
+**InterproScan data result for human-being**
+
+Homo_sapiens: 
+GCF_000001405.39_GRCh38.p13_protein.faa
+
+The directory is upcoming soon,
+
+<Last updated by Xi Zhang on Oct 8th,2021>

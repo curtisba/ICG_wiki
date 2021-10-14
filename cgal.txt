@@ -1,0 +1,69 @@
+**CGAL: Computing Genome Assembly Likelihoods**
+
+Documentation by Sarah Shah
+
+Publication: [[https://doi.org/10.1186/gb-2013-14-1-r8]]
+
+Useful for comparing results of different genome assemblies. CGAL "evaluates the uniformity of coverage of the assembly, taking into account errors in the reads, the insert size distribution and the extent of unassembled data". The final output is a negative value; the closer to zero, the better.
+
+1) Map DNA short reads to your genome using bowtie2:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 10
+cd /scratch3/sarahshah/roachblastoDNA-ONT-reseq-19072018/reads/workspace/pass/mixFlye/readsclassifier/allCGAL/HiGC_canumeta
+source activate bowtie2
+input=HiGC_canumeta.fasta
+bowtie2 -a --local --no-mixed --phred33 -q --threads 10 -x $input \
+-1 /scratch2/sarahshah/anviohybrid/Trimmed_Reads/BBO_DNA_1_PairNtrim_s3_8.5mil.fq -2 /scratch2/sarahshah/anviohybrid/Trimmed_Reads/BBO_DNA_2_PairNtrim_s3_8.5mil.fq -S $input.sam
+source deactivate
+</code>
+
+In the above shell I used the flag -a to map all possible reads, but if you find that it is taking too long or too much memory, remove this flag. The point is to use the same method to compare the different versions of your genome. Additionally, if your read files are really big, you may use a random subset by:
+<code>
+seqtk sample -s100 readfile1.fq 1000000 > readfile1_s100_1mil.fq
+#This subsets random 1 million reads. The -s100 flag is the sampling seed, make sure you use the same seed for the second set of reads.
+</code>
+
+2) Convert the sam file from Step 1) into a CGAL format:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 1
+input=HiGC_canumeta.fasta
+/opt/perun/cgal-0.9.6-beta/bowtie2convert $input.sam 450
+#450 is the maximum expected insert size.
+</code>
+
+KEEP ALL output files from this step!
+
+3) Get the unmapped reads information by:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 8
+input=HiGC_canumeta.fasta
+/opt/perun/cgal-0.9.6-beta/align $input 10000 8
+#10000 is a random subset
+</code>
+
+KEEP ALL output files from this step!
+
+4) Run the actual CGAL command:
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -cwd
+#$ -pe threaded 1
+input=HiGC_canumeta.fasta
+/opt/perun/cgal-0.9.6-beta/cgal $input
+</code>
+
+The .sh.o* file from above contains the likelihood value. The out.txt contains more information such as total number of reads, number of mapped and unmapped reads. 

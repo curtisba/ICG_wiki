@@ -1,0 +1,42 @@
+**A quick guide to Diamond by Tommy Harding**\\
+\\
+1- Format database:\\
+<code>
+diamond  makedb --in <your_database_as_fasta_file> -d <output_file_prefix>
+</code>
+   * This will create a file with extension dmnd.\\
+\\
+2- Run diamond:\\
+<code>
+diamond blastp --threads 8 -d <database> -q <query_file> -a <output_file_as_DIAMOND_alignment_archive> --salltitles --max-target-seqs 2000 --evalue 0.00001 --more-sensitive
+</code>
+   * Name the output file with the extension daa (DIAMOND alignment archive).\\
+\\
+3- View results:\\
+<code>
+diamond view -o <output_file> -f tab -a <infile>
+</code>
+   * <infile> here is the DIAMOND alignment archive file created at step 2.\\
+   * Name the output file with the extension tsv.\\
+   * Alternatively, you can specify the information to list in the tabular output like this:\\
+<code>
+diamond view -o <output_file> -f 6 qseqid sseqid pident length mismatch gapopen qstart qend qlen sstart send slen evalue -a <infile>
+</code>
+   * I like to have the lengths of the query and subject sequences (qlen and slen respectively) which is not included in the default tabular format.\\
+\\
+Steps 2 and 3 can be gathered in the same shell script. For example:\\
+<code>
+#!/bin/bash
+#$ -S /bin/bash
+. /etc/profile
+#$ -o diamond_nr.out
+#$ -e diamond_nr.err
+#$ -cwd
+#$ -pe threaded 8
+diamond blastp --threads 8 -d <database> -q <query_file> -a <output_file> --salltitles --max-target-seqs 2000 --evalue 0.00001 --more-sensitive
+diamond view -o <output_file> -f tab -a <infile>
+</code>
+For help:\\
+<code>
+diamond --help
+</code>

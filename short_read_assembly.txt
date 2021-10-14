@@ -1,0 +1,14 @@
+The following is a shell example to run metaspades when short reads are available.
+
+
+#!/bin/bash\\
+#$ -S /bin/bash\\
+. /etc/profile\\
+#$ -cwd\\
+#$ -o Blah.log\\
+#$ -pe threaded 20\\
+
+cd /to/the/path/containing/the reads/\\
+source activate spades\\
+metaspades.py -t 20 -m 230 --pe1-1 Blah_R1_PairNtrim.fq --pe1-2 Blah_R2_PairNtrim.fq  --pe-s Blah_R1R2unPairNtrim.fq -o /path/to/Metaspades_Blah_output\\
+conda deactivate

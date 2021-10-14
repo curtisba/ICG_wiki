@@ -1,0 +1,52 @@
+For various reasons, at some point, you will want to map your RNAseq data onto your assembled genome.
+
+Unless you have a prokaryotic genome or a eukaryotic genome with intronless genes you need a mapper that
+can properly deal with spliced alignments. Tophat2 is widely used and cited  https://ccb.jhu.edu/software/tophat/index.shtml but has now been superseded by HISAT2 http://ccb.jhu.edu/software/hisat2/index.shtml
+
+Before you can map your RNAseq reads to your genome you need to build an index of the genome assembly.
+
+In a shell script that you can qsub include the following line
+
+///scratch2/software/hisat2-2.1.0/hisat2-build -f name_of_genome_assembly.fasta root_for_index//
+
+This will create a series (depending on the size of the genome) of files with the root name eg
+
+pce_p3x.1.ht2
+
+pce_p3x.2.ht2
+
+pce_p3x.3.ht2
+
+Once the indices have been built you can proceed with the actual mapping.
+There are many options available http://ccb.jhu.edu/software/hisat2/manual.shtml but for our purposes we will
+restrict them to the bare essentials.
+
+A typical shell script to qsub would look like this
+<code>
+#!/bin/sh
+#$ -o logo_p3x_hisat
+#$ -cwd
+#$ -pe threaded 6
+
+/scratch2/software/hisat2-2.1.0/hisat2  -q -p 6 --phred33 --max-intronlen 1000 -k 2 -x pce_p3x -1 PCE_RNA_1_PairNtrim.fastq -2 PCE_RNA_2_PairNtrim.fastq -S pce_3x.sam
+</code>
+
+where
+
+-q indicates that the reads are in fastq format versus -f for fasta
+
+-p 6 indicates how many threads to use
+
+--phred33 indicates that scoring scheme for the quality scores
+
+--max-intronlen 1000 indicates that you believe that the longest real intron is 1000 bps (default is 50,000)
+
+-k 2 indicates how many distinct primary alignments to search for for each read
+
+-x pce_p3x is the index root name
+
+-1 PCE_RNA_1_PairNtrim.fastq indicates the file for the forward (/1) reads
+
+-2 PCE_RNA_2_PairNtrim.fastq indicates the file for the reverse (/2) reads
+
+-S pce_3x.sam indicates the name for the SAM output file
